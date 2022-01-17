@@ -245,6 +245,18 @@ namespace WorldPackets
             WorldPacket const* Write() override;
             uint32 DungeonEncounterID = 0;
         };
+
+        class InstanceGroupSizeChanged final : public ServerPacket
+        {
+        public:
+            InstanceGroupSizeChanged() : ServerPacket(SMSG_INSTANCE_GROUP_SIZE_CHANGED, 4) { }
+            InstanceGroupSizeChanged(uint32 groupSize)
+                : ServerPacket(SMSG_INSTANCE_GROUP_SIZE_CHANGED, 4), GroupSize(groupSize) { }
+
+            WorldPacket const* Write() override;
+
+            uint32 GroupSize = 0;
+        };
     }
 }
 

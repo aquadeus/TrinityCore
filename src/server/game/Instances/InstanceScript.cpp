@@ -396,6 +396,9 @@ bool InstanceScript::SetBossState(uint32 id, EncounterState state)
 
             bossInfo->state = state;
             SaveToDB();
+
+            if (state != IN_PROGRESS)
+                instance->ToInstanceMap()->UpdateInstanceGroupSize();
         }
 
         for (uint32 type = 0; type < MAX_DOOR_TYPES; ++type)

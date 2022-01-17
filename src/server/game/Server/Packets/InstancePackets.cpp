@@ -166,3 +166,10 @@ WorldPacket const* WorldPackets::Instance::BossKill::Write()
 
     return &_worldPacket;
 }
+
+WorldPacket const* WorldPackets::Instance::InstanceGroupSizeChanged::Write()
+{
+    _worldPacket << uint32(GroupSize);
+
+    return &_worldPacket;
+}

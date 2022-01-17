@@ -396,6 +396,8 @@ class TC_GAME_API Map : public GridRefManager<NGridType>
         Difficulty GetDifficultyID() const { return Difficulty(i_spawnMode); }
         MapDifficultyEntry const* GetMapDifficulty() const;
         ItemContext GetDifficultyLootItemContext() const;
+        virtual uint32 GetInstanceGroupSize() const;
+        virtual void SetInstanceGroupSize(uint32 /*groupSize*/) { }
 
         uint32 GetId() const;
         bool Instanceable() const;
@@ -940,6 +942,10 @@ class TC_GAME_API InstanceMap : public Map
 
         virtual void InitVisibilityDistance() override;
 
+        uint32 GetInstanceGroupSize() const override { return _groupSize; }
+        void SetInstanceGroupSize(uint32 groupSize) override;
+        void UpdateInstanceGroupSize();
+
         std::string GetDebugInfo() const override;
     private:
         bool m_resetAfterUnload;
@@ -947,6 +953,7 @@ class TC_GAME_API InstanceMap : public Map
         InstanceScript* i_data;
         uint32 i_script_id;
         InstanceScenario* i_scenario;
+        uint32 _groupSize;
 };
 
 class TC_GAME_API BattlegroundMap : public Map

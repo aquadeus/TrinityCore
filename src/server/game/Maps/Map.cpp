@@ -3900,7 +3900,8 @@ template TC_GAME_API void Map::RemoveFromMap(Conversation*, bool);
 InstanceMap::InstanceMap(uint32 id, time_t expiry, uint32 InstanceId, Difficulty SpawnMode, Map* _parent)
   : Map(id, expiry, InstanceId, SpawnMode, _parent),
     m_resetAfterUnload(false), m_unloadWhenEmpty(false),
-    i_data(nullptr), i_script_id(0), i_scenario(nullptr)
+    i_data(nullptr), i_script_id(0), i_scenario(nullptr),
+    _groupSize(0)
 {
     //lets initialize visibility distance for dungeons
     InstanceMap::InitVisibilityDistance();
@@ -3908,6 +3909,8 @@ InstanceMap::InstanceMap(uint32 id, time_t expiry, uint32 InstanceId, Difficulty
     // the timer is started by default, and stopped when the first player joins
     // this make sure it gets unloaded if for some reason no player joins
     m_unloadTimer = std::max(sWorld->getIntConfig(CONFIG_INSTANCE_UNLOAD_DELAY), (uint32)MIN_UNLOAD_DELAY);
+
+    UpdateInstanceGroupSize();
 }
 
 InstanceMap::~InstanceMap()
@@ -4081,6 +4084,8 @@ bool InstanceMap::AddPlayerToMap(Player* player, bool initPlayer /*= true*/)
     if (i_scenario)
         i_scenario->OnPlayerEnter(player);
 
+    UpdateInstanceGroupSize();
+
     return true;
 }
 
@@ -4117,6 +4122,7 @@ void InstanceMap::RemovePlayerFromMap(Player* player, bool remove)
     // for normal instances schedule the reset after all players have left
     SetResetSchedule(true);
     sInstanceSaveMgr->UnloadInstanceSave(GetInstanceId());
+    UpdateInstanceGroupSize();
 }
 
 void InstanceMap::CreateInstanceData(bool load)
@@ -4302,6 +4308,48 @@ void InstanceMap::SetResetSchedule(bool on)
     }
 }
 
+void InstanceMap::SetInstanceGroupSize(uint32 groupSize)
+{
+    if (_groupSize == groupSize)
+        return;
+
+    _groupSize = groupSize;
+
+    SendToPlayers(WorldPackets::Instance::InstanceGroupSizeChanged(_groupSize).Write());
+}
+
+void InstanceMap::UpdateInstanceGroupSize()
+{
+    if (i_data && i_data->IsEncounterInProgress())
+        return;
+
+    std::unordered_map<ObjectGuid, uint32> groupSizes;
+
+    PlayerList const& playerList = GetPlayers();
+    for (auto const& pair : playerList)
+    {
+        if (pair.GetSource()->IsGameMaster())
+            continue;
+
+        Group const* group = pair.GetSource()->GetGroup();
+        if (!group)
+            continue;
+
+        ++groupSizes[group->GetGUID()];
+    }
+
+    auto max = std::max_element(groupSizes.begin(), groupSizes.end(), [](decltype(groupSizes)::value_type const& a, decltype(groupSizes)::value_type const& b)
+    {
+        return a.second < b.second;
+    });
+
+    uint32 groupSize = max != groupSizes.end() ? max->second : 0;
+    DifficultyEntry const* difficulty = sDifficultyStore.AssertEntry(GetDifficultyID());
+    RoundToInterval<uint32>(groupSize, difficulty->MinPlayers, GetMaxPlayers());
+
+    SetInstanceGroupSize(groupSize);
+}
+
 MapDifficultyEntry const* Map::GetMapDifficulty() const
 {
     return sDB2Manager.GetMapDifficultyData(GetId(), GetDifficultyID());
@@ -4317,6 +4365,11 @@ ItemContext Map::GetDifficultyLootItemContext() const
         return ItemContext(difficulty->ItemContext);
 
     return ItemContext::NONE;
+}
+
+uint32 Map::GetInstanceGroupSize() const
+{
+    return GetMapDifficulty()->MaxPlayers;
 }
 
 uint32 Map::GetId() const
