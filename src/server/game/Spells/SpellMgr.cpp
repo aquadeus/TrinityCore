@@ -3180,6 +3180,7 @@ void SpellMgr::LoadSpellInfoCustomAttributes()
         }
 
         spellInfoMutable->_InitializeExplicitTargetMask();
+        spellInfoMutable->_InitializeLossOfControlInfo();
 
         if (spellInfoMutable->Speed > 0.0f)
         {

@@ -175,6 +175,24 @@ enum SpellCustomAttributes
     SPELL_ATTR0_CU_AURA_CANNOT_BE_SAVED          = 0x01000000,
 };
 
+enum LossOfControlType : uint8
+{
+    LOSS_OF_CONTROL_TYPE_NONE            = 0,
+    LOSS_OF_CONTROL_TYPE_POSSESS         = 1,
+    LOSS_OF_CONTROL_TYPE_CONFUSE         = 2,
+    LOSS_OF_CONTROL_TYPE_CHARM           = 3,
+    LOSS_OF_CONTROL_TYPE_HORROR          = 4,
+    LOSS_OF_CONTROL_TYPE_INCAPACITATE    = 5,
+    LOSS_OF_CONTROL_TYPE_PACIFY          = 6,
+    LOSS_OF_CONTROL_TYPE_ROOT            = 7,
+    LOSS_OF_CONTROL_TYPE_SILENCE         = 8,
+    LOSS_OF_CONTROL_TYPE_PACIFYSILENCE   = 9,
+    LOSS_OF_CONTROL_TYPE_DISARM          = 10,
+    LOSS_OF_CONTROL_TYPE_INTERRUPT       = 11,
+    LOSS_OF_CONTROL_TYPE_STUN            = 12,
+    LOSS_OF_CONTROL_TYPE_FEAR            = 13
+};
+
 uint32 GetTargetFlagMask(SpellTargetObjectTypes objType);
 
 class TC_GAME_API SpellImplicitTargetInfo
@@ -262,6 +280,12 @@ public:
         float Variance;
         float ResourceCoefficient;
     } Scaling;
+
+    struct LossOfControlInfo
+    {
+        LossOfControlType Type = LOSS_OF_CONTROL_TYPE_NONE;
+        Mechanics Mechanic = MECHANIC_NONE;
+    } LossOfControl;
 
     SpellEffectInfo(SpellInfo const* spellInfo) : _spellInfo(spellInfo), EffectIndex(EFFECT_0), Effect(SPELL_EFFECT_NONE), ApplyAuraName(AuraType(0)), ApplyAuraPeriod(0),
                         BasePoints(0), RealPointsPerLevel(0), PointsPerResource(0), Amplitude(0), ChainAmplitude(0),
@@ -600,6 +624,7 @@ class TC_GAME_API SpellInfo
     private:
         // loading helpers
         void _InitializeExplicitTargetMask();
+        void _InitializeLossOfControlInfo();
         void _InitializeSpellPositivity();
         void _LoadSpellSpecific();
         void _LoadAuraState();

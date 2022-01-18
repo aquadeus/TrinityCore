@@ -4347,6 +4347,77 @@ void SpellInfo::_InitializeExplicitTargetMask()
     ExplicitTargetMask = targetMask;
 }
 
+void SpellInfo::_InitializeLossOfControlInfo()
+{
+    auto GetLossOfControlTypeFn = [](AuraType aura, Mechanics mechanic) -> ::LossOfControlType
+    {
+        switch (aura)
+        {
+            case SPELL_AURA_MOD_POSSESS:
+                return LOSS_OF_CONTROL_TYPE_POSSESS;
+
+            case SPELL_AURA_MOD_CONFUSE:
+                return LOSS_OF_CONTROL_TYPE_CONFUSE;
+
+            case SPELL_AURA_MOD_CHARM:
+                return LOSS_OF_CONTROL_TYPE_CHARM;
+
+            case SPELL_AURA_MOD_PACIFY:
+                return LOSS_OF_CONTROL_TYPE_PACIFY;
+
+            case SPELL_AURA_MOD_ROOT:
+            case SPELL_AURA_MOD_ROOT_2:
+                return LOSS_OF_CONTROL_TYPE_ROOT;
+
+            case SPELL_AURA_MOD_SILENCE:
+                return LOSS_OF_CONTROL_TYPE_SILENCE;
+
+            case SPELL_AURA_MOD_PACIFY_SILENCE:
+                return LOSS_OF_CONTROL_TYPE_PACIFYSILENCE;
+
+            case SPELL_AURA_MOD_DISARM:
+                return LOSS_OF_CONTROL_TYPE_DISARM;
+
+            case SPELL_AURA_MOD_STUN:
+                if (mechanic != MECHANIC_STUN)
+                    return LOSS_OF_CONTROL_TYPE_INCAPACITATE;
+                return LOSS_OF_CONTROL_TYPE_STUN;
+
+            case SPELL_AURA_MOD_FEAR:
+            case SPELL_AURA_MOD_FEAR_2:
+                if (mechanic != MECHANIC_FEAR)
+                    return LOSS_OF_CONTROL_TYPE_HORROR;
+                return LOSS_OF_CONTROL_TYPE_FEAR;
+
+            default:
+                break;
+        }
+
+        switch (mechanic)
+        {
+            case MECHANIC_INTERRUPT:
+                return LOSS_OF_CONTROL_TYPE_INTERRUPT;
+            default:
+                break;
+        }
+
+        return LOSS_OF_CONTROL_TYPE_NONE;
+    };
+
+    for (SpellEffectInfo const& effect : GetEffects())
+    {
+        if (!effect.IsEffect())
+            continue;
+
+        SpellEffectInfo::LossOfControlInfo& lossOfControlInfo = const_cast<SpellEffectInfo&>(effect).LossOfControl;
+        if (lossOfControlInfo.Type != LOSS_OF_CONTROL_TYPE_NONE)
+            continue;
+
+        lossOfControlInfo.Mechanic = effect.Mechanic ? effect.Mechanic : Mechanics(Mechanic);
+        lossOfControlInfo.Type = GetLossOfControlTypeFn(AuraType(effect.ApplyAuraName), lossOfControlInfo.Mechanic);
+    }
+}
+
 inline bool _isPositiveTarget(SpellEffectInfo const& effect)
 {
     if (!effect.IsEffect())

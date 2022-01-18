@@ -157,6 +157,26 @@ WorldPacket const* WorldPackets::Spells::AuraUpdate::Write()
     return &_worldPacket;
 }
 
+ByteBuffer& operator<<(ByteBuffer& data, WorldPackets::Spells::LossOfControlInfo const& lossOfControlInfo)
+{
+    data << uint8(lossOfControlInfo.AuraSlot);
+    data << uint8(lossOfControlInfo.EffectIndex);
+    data << uint8(lossOfControlInfo.Type);
+    data << uint8(lossOfControlInfo.Mechanic);
+
+    return data;
+}
+
+WorldPacket const* WorldPackets::Spells::LossOfControlAuraUpdate::Write()
+{
+    _worldPacket << TargetGuid;
+    _worldPacket << static_cast<uint32>(Infos.size());
+    for (LossOfControlInfo const& lossOfControlInfo : Infos)
+        _worldPacket << lossOfControlInfo;
+
+    return &_worldPacket;
+}
+
 ByteBuffer& operator>>(ByteBuffer& buffer, Optional<WorldPackets::Spells::TargetLocation>& location)
 {
     location = boost::in_place();

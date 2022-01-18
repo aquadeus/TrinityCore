@@ -24987,14 +24987,20 @@ void Player::SendAurasForTarget(Unit* target) const
     update.UnitGUID = target->GetGUID();
     update.Auras.reserve(visibleAuras.size());
 
+    WorldPackets::Spells::LossOfControlAuraUpdate lossOfControlAuraUpdate;
+
     for (AuraApplication* auraApp : visibleAuras)
     {
         WorldPackets::Spells::AuraInfo auraInfo;
         auraApp->BuildUpdatePacket(auraInfo, false);
         update.Auras.push_back(auraInfo);
+        auraApp->BuildLossOfControlPacket(lossOfControlAuraUpdate, auraInfo);
     }
 
     SendDirectMessage(update.Write());
+
+    if (!lossOfControlAuraUpdate.Infos.empty())
+        SendDirectMessage(lossOfControlAuraUpdate.Write());
 }
 
 void Player::SetDailyQuestStatus(uint32 quest_id)

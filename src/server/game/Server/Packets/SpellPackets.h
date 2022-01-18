@@ -1051,6 +1051,25 @@ namespace WorldPackets
             bool Reverse = false;
             int32 SpellID = 0;
         };
+
+        struct LossOfControlInfo
+        {
+            Mechanics Mechanic = MECHANIC_NONE;
+            uint32 Type = 0;
+            uint8 AuraSlot = 0;
+            uint8 EffectIndex = 0;
+        };
+
+        class LossOfControlAuraUpdate final : public ServerPacket
+        {
+        public:
+            LossOfControlAuraUpdate() : ServerPacket(SMSG_LOSS_OF_CONTROL_AURA_UPDATE, 4) { }
+
+            WorldPacket const* Write() override;
+
+            std::vector<LossOfControlInfo> Infos;
+            ObjectGuid TargetGuid;
+        };
     }
 }
 

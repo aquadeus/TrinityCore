@@ -282,6 +282,29 @@ void AuraApplication::BuildUpdatePacket(WorldPackets::Spells::AuraInfo& auraInfo
     }
 }
 
+void AuraApplication::BuildLossOfControlPacket(WorldPackets::Spells::LossOfControlAuraUpdate& lossOfControlUpdate, WorldPackets::Spells::AuraInfo const& auraInfo)
+{
+    if (!auraInfo.AuraData.is_initialized() || GetBase()->GetCasterGUID() == _target->GetGUID())
+        return;
+
+    if (auraInfo.AuraData->Flags & AFLAG_DURATION)
+    {
+        for (AuraEffect const* aurEff : GetBase()->GetAuraEffects())
+        {
+            SpellEffectInfo::LossOfControlInfo const& lossOfControlInfo = aurEff->GetSpellEffectInfo().LossOfControl;
+            if (lossOfControlInfo.Type == LOSS_OF_CONTROL_TYPE_NONE)
+                continue;
+
+            WorldPackets::Spells::LossOfControlInfo info;
+            info.AuraSlot = GetSlot();
+            info.EffectIndex = aurEff->GetEffIndex();
+            info.Type = lossOfControlInfo.Type;
+            info.Mechanic = lossOfControlInfo.Mechanic;
+            lossOfControlUpdate.Infos.push_back(info);
+        }
+    }
+}
+
 void AuraApplication::ClientUpdate(bool remove)
 {
     _needClientUpdate = false;
@@ -890,6 +913,7 @@ void Aura::SetDuration(int32 duration, bool withMods)
 
 void Aura::RefreshDuration(bool withMods)
 {
+    bool isPandemic = false;
     Unit* caster = GetCaster();
     if (withMods && caster)
     {
@@ -911,11 +935,34 @@ void Aura::RefreshDuration(bool withMods)
     for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
         if (AuraEffect* aurEff = GetEffect(i))
             aurEff->ResetTicks();
+
+    for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+        if (AuraEffect const* effect = GetEffect(i))
+            if (effect->GetAuraType() == SPELL_AURA_PERIODIC_DAMAGE || effect->GetAuraType() == SPELL_AURA_PERIODIC_HEAL)
+                isPandemic = true;
+
+    if (isPandemic)
+    {
+        m_maxDuration = CalcMaxDuration();
+        int32 duration = GetDuration();
+        int32 maxDuration = GetMaxDuration();
+
+        // Max duration of reapplied aura should be 100 + 30% of base max duration
+        int32 maxAllowedDuration = CalculatePct(maxDuration, 30);
+
+        if (duration + maxDuration < maxAllowedDuration)
+            maxDuration = duration + m_maxDuration;
+        else
+            maxDuration = maxAllowedDuration;
+
+        SetDuration(maxDuration);
+    }
 }
 
 void Aura::RefreshTimers(bool resetPeriodicTimer)
 {
     m_maxDuration = CalcMaxDuration();
+
     if (m_spellInfo->HasAttribute(SPELL_ATTR8_DONT_RESET_PERIODIC_TIMER))
     {
         int32 minPeriod = m_maxDuration;
