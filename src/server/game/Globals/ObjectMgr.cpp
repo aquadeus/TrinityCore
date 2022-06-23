@@ -497,6 +497,9 @@ void ObjectMgr::LoadCreatureTemplate(Field* fields)
     creatureTemplate.SpellSchoolImmuneMask  = fields[68].GetUInt32();
     creatureTemplate.flags_extra            = fields[69].GetUInt32();
     creatureTemplate.ScriptID               = GetScriptId(fields[70].GetString());
+
+    if (VignetteEntry const* vignette = sVignetteStore.LookupEntry(creatureTemplate.VignetteID))
+        creatureTemplate.TrackingQuestID = vignette->VisibleTrackingQuestID;
 }
 
 void ObjectMgr::LoadCreatureTemplateResistances()

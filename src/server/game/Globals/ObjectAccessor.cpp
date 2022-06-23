@@ -270,6 +270,12 @@ Player* ObjectAccessor::FindPlayerByLowGUID(ObjectGuid::LowType lowguid)
     return ObjectAccessor::FindPlayer(guid);
 }
 
+GameObject* ObjectAccessor::FindGameObject(ObjectGuid const& guid)
+{
+    GameObject* gameObject = HashMapHolder<GameObject>::Find(guid);
+    return gameObject && gameObject->IsInWorld() ? gameObject : nullptr;
+}
+
 Player* ObjectAccessor::FindConnectedPlayer(ObjectGuid const& guid)
 {
     return HashMapHolder<Player>::Find(guid);

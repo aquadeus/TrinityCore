@@ -773,3 +773,46 @@ WorldPacket const* WorldPackets::Misc::DisplayToast::Write()
 
     return &_worldPacket;
 }
+
+WorldPacket const* WorldPackets::Misc::VignetteUpdate::Write()
+{
+    _worldPacket.WriteBit(ForceUpdate);
+    _worldPacket.WriteBit(UnkBit901);
+    _worldPacket.FlushBits();
+
+    _worldPacket << static_cast<uint32>(RemovedCount.IDs.size());
+    for (ObjectGuid const& ID : RemovedCount.IDs)
+        _worldPacket << ID;
+
+    _worldPacket << static_cast<uint32>(AddedCount.IdList.IDs.size());
+    for (ObjectGuid const& ID : AddedCount.IdList.IDs)
+        _worldPacket << ID;
+
+    _worldPacket << static_cast<uint32>(AddedCount.Data.size());
+    for (auto const& data : AddedCount.Data)
+    {
+        _worldPacket << data.Position;
+        _worldPacket << data.ObjGUID;
+        _worldPacket << data.VignetteID;
+        _worldPacket << data.AreaID;
+        _worldPacket << data.Unk901_1;
+        _worldPacket << data.Unk901_2;
+    }
+
+    _worldPacket << static_cast<uint32>(UpdatedCount.IdList.IDs.size());
+    for (ObjectGuid const& ID : UpdatedCount.IdList.IDs)
+        _worldPacket << ID;
+
+    _worldPacket << static_cast<uint32>(UpdatedCount.Data.size());
+    for (auto const& data : UpdatedCount.Data)
+    {
+        _worldPacket << data.Position;
+        _worldPacket << data.ObjGUID;
+        _worldPacket << data.VignetteID;
+        _worldPacket << data.AreaID;
+        _worldPacket << data.Unk901_1;
+        _worldPacket << data.Unk901_2;
+    }
+
+    return &_worldPacket;
+}

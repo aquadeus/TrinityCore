@@ -387,6 +387,9 @@ class TC_GAME_API Creature : public Unit, public GridObject<Creature>, public Ma
 
         void ExitVehicle(Position const* exitPosition = nullptr) override;
 
+        uint32 GetVignetteId() const { return m_creatureInfo ? m_creatureInfo->VignetteID : 0; }
+        uint32 GetTrackingQuestID() const { return m_creatureInfo ? m_creatureInfo->TrackingQuestID : 0; }
+
     protected:
         bool CreateFromProto(ObjectGuid::LowType guidlow, uint32 entry, CreatureData const* data = nullptr, uint32 vehId = 0);
         bool InitEntry(uint32 entry, CreatureData const* data = nullptr);

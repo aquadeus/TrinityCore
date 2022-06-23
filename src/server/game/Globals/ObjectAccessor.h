@@ -82,6 +82,7 @@ namespace ObjectAccessor
     TC_GAME_API Player* FindPlayer(ObjectGuid const&);
     TC_GAME_API Player* FindPlayerByName(std::string_view name);
     TC_GAME_API Player* FindPlayerByLowGUID(ObjectGuid::LowType lowguid);
+    TC_GAME_API GameObject* FindGameObject(ObjectGuid const& guid);
 
     // this returns Player even if he is not in world, for example teleporting
     TC_GAME_API Player* FindConnectedPlayer(ObjectGuid const&);

@@ -33,6 +33,7 @@
 #include "PlayerTaxi.h"
 #include "QuestDef.h"
 #include "SceneMgr.h"
+#include "VignetteMgr.h"
 
 struct AccessRequirement;
 struct AchievementEntry;
@@ -2830,6 +2831,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         UF::UpdateField<UF::PlayerData, 0, TYPEID_PLAYER> m_playerData;
         UF::UpdateField<UF::ActivePlayerData, 0, TYPEID_ACTIVE_PLAYER> m_activePlayerData;
 
+        Vignette::Manager& GetVignetteMgr() { return _vignetteMgr; }
+
     protected:
         // Gamemaster whisper whitelist
         GuidList WhisperList;
@@ -3089,6 +3092,8 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
 
         // last used pet number (for BG's)
         uint32 m_lastpetnumber;
+
+        Vignette::Manager _vignetteMgr;
 
         // Player summoning
         time_t m_summon_expire;
