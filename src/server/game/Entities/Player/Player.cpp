@@ -14755,6 +14755,11 @@ void Player::OnGossipSelect(WorldObject* source, uint32 gossipListId, uint32 men
         case GOSSIP_OPTION_TRANSMOGRIFIER:
             GetSession()->SendOpenTransmogrifier(guid);
             break;
+        case GOSSIP_OPTION_MAP_ADVENTURE:
+        {
+            this->GetGarrison()->SendMapData(this);
+            break;
+        }
     }
 
     ModifyMoney(-cost);
