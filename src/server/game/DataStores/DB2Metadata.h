@@ -5063,7 +5063,7 @@ struct GarrFollowerTypeMeta
     {
         static constexpr DB2MetaField fields[7] =
         {
-            { FT_BYTE, 1, false },
+            { FT_BYTE, 1, true },
             { FT_BYTE, 1, false },
             { FT_BYTE, 1, false },
             { FT_SHORT, 1, false },
@@ -5619,7 +5619,7 @@ struct GarrTalentTreeMeta
     {
         static constexpr DB2MetaField fields[12] =
         {
-            { FT_STRING, 1, true },
+            { FT_STRING, 1, false },
             { FT_BYTE, 1, false },
             { FT_INT, 1, true },
             { FT_BYTE, 1, true },
@@ -5628,8 +5628,8 @@ struct GarrTalentTreeMeta
             { FT_SHORT, 1, false },
             { FT_INT, 1, true },
             { FT_INT, 1, true },
-            { FT_BYTE, 1, false },
-            { FT_BYTE, 1, false },
+            { FT_BYTE, 1, true },
+            { FT_BYTE, 1, true },
             { FT_INT, 1, true },
         };
         static constexpr DB2Meta instance(1361030, -1, 12, 12, 0xC148F18E, fields, -1);

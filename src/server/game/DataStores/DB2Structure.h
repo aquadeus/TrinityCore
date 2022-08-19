@@ -1665,6 +1665,18 @@ struct GarrFollowerEntry
     int32 CovenantID;
 };
 
+struct GarrFollowerTypeEntry
+{
+    uint32 ID;
+    int8 GarrTypeID;
+    uint8 MaxFollowers;
+    uint8 MaxFollowerBuildingType;
+    uint16 MaxItemLevel;
+    uint8 LevelRangeBias;
+    uint8 ItemLevelRangeBias;
+    int32 Flags;
+};
+
 struct GarrFollowerXAbilityEntry
 {
     uint32 ID;
@@ -1708,6 +1720,17 @@ struct GarrMissionEntry
     float AutoMissionScalar;
     int32 AutoMissionScalarCurveID;
     int32 AutoCombatantEnvCasterID;
+};
+
+struct GarrMissionSetEntry
+{
+    uint32 ID;
+    int32 GarrTypeID;
+    int32 Field902_1;
+    int32 CooldownSeconds;
+    int32 Condition902;
+    int32 Field902_4;
+    int32 Field902_5;
 };
 
 struct GarrPlotEntry
@@ -1757,6 +1780,36 @@ struct GarrSiteLevelPlotInstEntry
     uint16 GarrSiteLevelID;
     uint8 GarrPlotInstanceID;
     uint8 UiMarkerSize;
+};
+
+struct GarrTalentTreeEntry
+{
+    uint32 ID;
+    LocalizedString Name;
+    uint8 GarrTypeID;
+    int32 ClassID;
+    int8 MaxTiers;
+    int8 UiOrder;
+    int32 Flags;
+    uint16 UiTextureKitID;
+    int32 GarrTalentTreeType;
+    int32 PlayerConditionID;
+    int8 FeatureTypeIndex;
+    int8 FeatureSubtypeIndex;
+    int32 CurrencyID;
+};
+
+struct GarrTypeEntry
+{
+    uint32 ID;
+    uint32 PrimaryCurrencyTypeID;
+    uint32 SecondaryCurrencyTypeID;
+    uint32 ExpansionID;
+    int32 Flags;
+    float AutoFollowerHealRate;
+    int32 MissionCostCurveID;
+    float AutoFollowerHealCostMult;
+    std::array<int32, 2> MapIDs;
 };
 
 struct GemPropertiesEntry

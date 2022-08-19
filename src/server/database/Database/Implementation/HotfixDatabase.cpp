@@ -650,6 +650,11 @@ void HotfixDatabaseConnection::DoPrepareStatements()
     PREPARE_LOCALE_STMT(HOTFIX_SEL_GARR_FOLLOWER, "SELECT ID, HordeSourceText_lang, AllianceSourceText_lang, TitleName_lang FROM garr_follower_locale"
         " WHERE (`VerifiedBuild` > 0) = ? AND locale = ?", CONNECTION_SYNCH);
 
+    // GarrFollowerType.db2
+    PrepareStatement(HOTFIX_SEL_GARR_FOLLOWER_TYPE, "SELECT ID, GarrTypeID, MaxFollowers, MaxFollowerBuildingType, MaxItemLevel, LevelRangeBias, "
+        "ItemLevelRangeBias, Flags FROM garr_follower_type WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
+    PREPARE_MAX_ID_STMT(HOTFIX_SEL_GARR_FOLLOWER_TYPE, "SELECT MAX(ID) + 1 FROM garr_follower_type", CONNECTION_SYNCH);
+
     // GarrFollowerXAbility.db2
     PrepareStatement(HOTFIX_SEL_GARR_FOLLOWER_X_ABILITY, "SELECT ID, OrderIndex, FactionIndex, GarrAbilityID, GarrFollowerID"
         " FROM garr_follower_x_ability WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
@@ -664,6 +669,11 @@ void HotfixDatabaseConnection::DoPrepareStatements()
     PREPARE_MAX_ID_STMT(HOTFIX_SEL_GARR_MISSION, "SELECT MAX(ID) + 1 FROM garr_mission", CONNECTION_SYNCH);
     PREPARE_LOCALE_STMT(HOTFIX_SEL_GARR_MISSION, "SELECT ID, Name_lang, Location_lang, Description_lang FROM garr_mission_locale"
         " WHERE (`VerifiedBuild` > 0) = ? AND locale = ?", CONNECTION_SYNCH);
+
+    // GarrMissionSet.db2
+    PrepareStatement(HOTFIX_SEL_GARR_MISSION_SET, "SELECT ID, GarrTypeID, Field902_1, CooldownSeconds, Condition902, Field902_4, Field902_5"
+        " FROM garr_mission_set WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
+    PREPARE_MAX_ID_STMT(HOTFIX_SEL_GARR_MISSION_SET, "SELECT MAX(ID) + 1 FROM garr_mission_set", CONNECTION_SYNCH);
 
     // GarrPlot.db2
     PrepareStatement(HOTFIX_SEL_GARR_PLOT, "SELECT ID, Name, PlotType, HordeConstructObjID, AllianceConstructObjID, Flags, UiCategoryID, "
@@ -687,6 +697,18 @@ void HotfixDatabaseConnection::DoPrepareStatements()
     PrepareStatement(HOTFIX_SEL_GARR_SITE_LEVEL_PLOT_INST, "SELECT ID, UiMarkerPosX, UiMarkerPosY, GarrSiteLevelID, GarrPlotInstanceID, UiMarkerSize"
         " FROM garr_site_level_plot_inst WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
     PREPARE_MAX_ID_STMT(HOTFIX_SEL_GARR_SITE_LEVEL_PLOT_INST, "SELECT MAX(ID) + 1 FROM garr_site_level_plot_inst", CONNECTION_SYNCH);
+
+    // GarrTalentTree.db2
+    PrepareStatement(HOTFIX_SEL_GARR_TALENT_TREE, "SELECT ID, Name, GarrTypeID, ClassID, MaxTiers, UiOrder, Flags, UiTextureKitID, "
+        "GarrTalentTreeType, PlayerConditionID, FeatureTypeIndex, FeatureSubtypeIndex, CurrencyID FROM garr_talent_tree"
+        " WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
+    PREPARE_MAX_ID_STMT(HOTFIX_SEL_GARR_TALENT_TREE, "SELECT MAX(ID) + 1 FROM garr_talent_tree", CONNECTION_SYNCH);
+    PREPARE_LOCALE_STMT(HOTFIX_SEL_GARR_TALENT_TREE, "SELECT ID, Name_lang FROM garr_talent_tree_locale WHERE (`VerifiedBuild` > 0) = ? AND locale = ?", CONNECTION_SYNCH);
+
+    // GarrType.db2
+    PrepareStatement(HOTFIX_SEL_GARR_TYPE, "SELECT ID, PrimaryCurrencyTypeID, SecondaryCurrencyTypeID, ExpansionID, Flags, AutoFollowerHealRate, "
+        "MissionCostCurveID, AutoFollowerHealCostMult, MapIDs1, MapIDs2 FROM garr_type WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
+    PREPARE_MAX_ID_STMT(HOTFIX_SEL_GARR_TYPE, "SELECT MAX(ID) + 1 FROM garr_type", CONNECTION_SYNCH);
 
     // GemProperties.db2
     PrepareStatement(HOTFIX_SEL_GEM_PROPERTIES, "SELECT ID, EnchantId, Type FROM gem_properties WHERE (`VerifiedBuild` > 0) = ?", CONNECTION_SYNCH);
