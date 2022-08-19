@@ -437,6 +437,19 @@ namespace WorldPackets
 
             uint32 GarrPlotInstanceID = 0;
         };
+
+        class GarrisonOpenTalentNpc final : public ServerPacket
+        {
+        public:
+            GarrisonOpenTalentNpc() : ServerPacket(SMSG_GARRISON_OPEN_TALENT_NPC, 16 + 4 + 4) { }
+            GarrisonOpenTalentNpc(ObjectGuid npcGUID, int32 talentTreeID, int32 unk) : ServerPacket(SMSG_GARRISON_OPEN_TALENT_NPC, 16 + 4 + 4), NpcGUID(npcGUID), GarrTalentTreeID(talentTreeID), Unk(unk) { }
+
+            ObjectGuid NpcGUID;
+            int32 GarrTalentTreeID;
+            int32 Unk = 0;
+
+            WorldPacket const* Write() override;
+        };
     }
 }
 

@@ -2351,6 +2351,20 @@ private:
     TaskScheduler _scheduler;
 };
 
+struct npc_test : public ScriptedAI
+{
+    npc_test(Creature* creature) : ScriptedAI(creature) { }
+
+    bool OnGossipHello(Player* player) override
+    {
+        CloseGossipMenuFor(player);
+        //player->GetGarrisonOpenTalentNpc(me->GetGUID());
+        TC_LOG_ERROR("misc.misc", "test");
+
+        return true;
+    }
+};
+
 void AddSC_npcs_special()
 {
     new npc_air_force_bots();
@@ -2375,4 +2389,5 @@ void AddSC_npcs_special()
     new npc_argent_squire_gruntling();
     new npc_bountiful_table();
     RegisterCreatureAI(npc_gen_void_zone);
+    RegisterCreatureAI(npc_test);
 }

@@ -481,4 +481,13 @@ WorldPacket const* GarrisonBuildingActivated::Write()
 
     return &_worldPacket;
 }
+
+WorldPacket const* WorldPackets::Garrison::GarrisonOpenTalentNpc::Write()
+{
+    _worldPacket << NpcGUID;
+    _worldPacket << int32(GarrTalentTreeID);
+    _worldPacket << int32(Unk);
+
+    return &_worldPacket;
+}
 }
