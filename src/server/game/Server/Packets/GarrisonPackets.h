@@ -437,6 +437,29 @@ namespace WorldPackets
 
             uint32 GarrPlotInstanceID = 0;
         };
+
+        class GarrisonOpenMissionNpc final : public ClientPacket
+        {
+        public:
+            GarrisonOpenMissionNpc(WorldPacket&& packet) : ClientPacket(CMSG_OPEN_MISSION_NPC, std::move(packet)) { }
+
+            void Read() override;
+
+            ObjectGuid NpcGUID;
+            int32 FollowerType = 0;
+        };
+
+        class GarrisonOpenMissionNpcResponse final : public ServerPacket
+        {
+        public:
+            GarrisonOpenMissionNpcResponse() : ServerPacket(SMSG_GARRISON_OPEN_MISSION_NPC, 16 + 4) { }
+
+            WorldPacket const* Write() override;
+
+            ObjectGuid NpcGUID;
+            int32 FollowerType = 0;
+        };
+
     }
 }
 

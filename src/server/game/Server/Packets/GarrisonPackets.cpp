@@ -481,4 +481,18 @@ WorldPacket const* GarrisonBuildingActivated::Write()
 
     return &_worldPacket;
 }
+
+void WorldPackets::Garrison::GarrisonOpenMissionNpc::Read()
+{
+    _worldPacket >> NpcGUID;
+    _worldPacket >> FollowerType;
+}
+
+WorldPacket const* WorldPackets::Garrison::GarrisonOpenMissionNpcResponse::Write()
+{
+    _worldPacket << NpcGUID;
+    _worldPacket << int32(FollowerType);
+
+    return &_worldPacket;
+}
 }
