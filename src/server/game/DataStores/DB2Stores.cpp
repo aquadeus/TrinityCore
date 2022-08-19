@@ -723,7 +723,6 @@ uint32 DB2Manager::LoadStores(std::string const& dataPath, LocaleConstant defaul
     LOAD_DB2(sGarrFollowerXAbilityStore);
     LOAD_DB2(sGarrMissionStore);
     LOAD_DB2(sGarrMissionSetStore);
-    LOAD_DB2(sGarrTypeStore);
     LOAD_DB2(sGarrPlotStore);
     LOAD_DB2(sGarrPlotBuildingStore);
     LOAD_DB2(sGarrPlotInstanceStore);
