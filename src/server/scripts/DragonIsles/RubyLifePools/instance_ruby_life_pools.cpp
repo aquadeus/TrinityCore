@@ -24,6 +24,7 @@ ObjectData const creatureData[] =
     { BOSS_MELIDRUSSA_CHILLWORN,    DATA_MELIDRUSSA_CHILLWORN          },
     { BOSS_KOKIA_BLAZEHOOF,         DATA_KOKIA_BLAZEHOOF               },
     { BOSS_KYRAKKA,                 DATA_KYRAKKA_AND_ERKHART_STORMVEIN },
+    { NPC_DEFIER_DRAGHAR,           DATA_DEFIER_DRAGHAR                },
     { 0,                            0                                  }  // END
 };
 

@@ -30,7 +30,9 @@ enum RLPDataTypes
     // Encounters
     DATA_MELIDRUSSA_CHILLWORN          = 0,
     DATA_KOKIA_BLAZEHOOF               = 1,
-    DATA_KYRAKKA_AND_ERKHART_STORMVEIN = 2
+    DATA_KYRAKKA_AND_ERKHART_STORMVEIN = 2,
+
+    DATA_DEFIER_DRAGHAR                = 3
 };
 
 enum RLPCreatureIds
@@ -38,7 +40,10 @@ enum RLPCreatureIds
     // Bosses
     BOSS_MELIDRUSSA_CHILLWORN   = 188252,
     BOSS_KOKIA_BLAZEHOOF        = 189232,
-    BOSS_KYRAKKA                = 190484
+    BOSS_KYRAKKA                = 190484,
+
+    // NPCs
+    NPC_DEFIER_DRAGHAR          = 187897
 };
 
 enum RLPGameObjectIds
