@@ -7822,7 +7822,7 @@ void Spell::DelayedChannel()
     if (m_spellState != SPELL_STATE_CASTING)
         return;
 
-    if (IsDelayableNoMore())                                    // Spells may only be delayed twice
+    if (IsDelayableNoMore())                                    // Spells like Ray of Frost could be delayed up to five times
         return;
 
     //check pushback reduce
