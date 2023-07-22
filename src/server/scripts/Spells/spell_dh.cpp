@@ -85,9 +85,9 @@ enum DemonHunterSpells
     SPELL_DH_FEL_DEVASTATION_DMG                   = 212105,
     SPELL_DH_FEL_DEVASTATION_HEAL                  = 212106,
     SPELL_DH_FEL_RUSH                              = 195072,
-    SPELL_DH_FEL_RUSH_DMG                          = 192611,
-    SPELL_DH_FEL_RUSH_GROUND                       = 197922,
-    SPELL_DH_FEL_RUSH_WATER_AIR                    = 197923,
+    SPELL_DH_FEL_RUSH_DAMAGE                       = 192611,
+    SPELL_DH_FEL_RUSH_WATER_GROUND                 = 197922,
+    SPELL_DH_FEL_RUSH_AIR                          = 197923,
     SPELL_DH_FELBLADE                              = 232893,
     SPELL_DH_FELBLADE_CHARGE                       = 213241,
     SPELL_DH_FELBLADE_DMG                          = 213243,
@@ -496,6 +496,54 @@ class spell_dh_soul_furnace_conduit : public AuraScript
     }
 };
 
+// 195072 - Fel Rush
+class spell_dh_havoc_fel_rush : public SpellScript
+{
+    PrepareSpellScript(spell_dh_havoc_fel_rush);
+
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_DH_FEL_RUSH_WATER_GROUND, SPELL_DH_FEL_RUSH_AIR });
+    }
+
+    SpellCastResult CheckCast()
+    {
+        if (GetCaster()->HasUnitState(UNIT_STATE_ROOT))
+            return SPELL_FAILED_ROOTED;
+        return SPELL_CAST_OK;
+    }
+
+    void HandleWaterGroundRush(SpellEffIndex /*effIndex*/)
+    {
+        if (Unit* caster = GetCaster())
+        {
+            if (!caster->IsFalling() || caster->IsInWater())
+            {
+                caster->CastSpell(*GetHitDest(), SPELL_DH_FEL_RUSH_DAMAGE, true);
+                caster->CastSpell(caster, SPELL_DH_FEL_RUSH_WATER_GROUND, true);
+            }
+        }
+    }
+
+    void HandleAirRush(SpellEffIndex /*effIndex*/)
+    {
+        if (Unit* caster = GetCaster())
+        {
+            if (caster->IsFalling())
+            {
+                caster->CastSpell(*GetHitDest(), SPELL_DH_FEL_RUSH_DAMAGE, true);
+                caster->CastSpell(caster, SPELL_DH_FEL_RUSH_AIR, true);
+            }
+        }
+    }
+
+    void Register() override
+    {
+        OnCheckCast += SpellCheckCastFn(spell_dh_havoc_fel_rush::CheckCast);
+        OnEffectHitTarget += SpellEffectFn(spell_dh_havoc_fel_rush::HandleWaterGroundRush, EFFECT_0, SPELL_EFFECT_DUMMY);
+        OnEffectHitTarget += SpellEffectFn(spell_dh_havoc_fel_rush::HandleAirRush, EFFECT_1, SPELL_EFFECT_DUMMY);
+    }
+};
 void AddSC_demon_hunter_spell_scripts()
 {
     RegisterSpellScript(spell_dh_chaos_strike);
@@ -507,6 +555,7 @@ void AddSC_demon_hunter_spell_scripts()
     RegisterSpellScript(spell_dh_sigil_of_chains);
 
     // Havoc
+    RegisterSpellScript(spell_dh_havoc_fel_rush);
 
     /* Spells & Auras */
 
