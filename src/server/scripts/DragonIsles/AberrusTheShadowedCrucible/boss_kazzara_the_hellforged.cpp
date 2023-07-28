@@ -669,6 +669,27 @@ struct at_kazzara_wings_of_extinction : AreaTriggerAI
     }
 };
 
+// 407069 - Rays of Anguish
+class spell_kazzara_rays_of_anguish : public AuraScript
+{
+    void CalculatePeriodic(AuraEffect const* aurEff, bool& isPeriodic, int32& amplitude)
+    {
+        isPeriodic = true;
+        amplitude = float(GetDuration()) /* / dreadrifts */;
+    }
+
+    void UpdateSpecAura(AuraEffect const* aurEff)
+    {
+        // TODO
+    }
+
+    void Register() override
+    {
+        DoEffectCalcPeriodic += AuraEffectCalcPeriodicFn(spell_kazzara_rays_of_anguish::CalculatePeriodic, EFFECT_1, SPELL_AURA_DUMMY);
+        OnEffectPeriodic += AuraEffectPeriodicFn(spell_kazzara_rays_of_anguish::UpdateSpecAura, EFFECT_1, SPELL_AURA_DUMMY);
+    }
+};
+
 void AddSC_boss_kazzara_the_hellforged()
 {
     RegisterAberrusTheShadowedCrucibleCreatureAI(boss_kazzara_the_hellforged);
@@ -681,6 +702,7 @@ void AddSC_boss_kazzara_the_hellforged()
     RegisterSpellScript(spell_kazzara_energize);
     RegisterSpellScript(spell_kazzara_hellbeam_consume_energy);
     RegisterSpellScript(spell_kazzara_ray_of_anguish_trigger);
+    RegisterSpellScript(spell_kazzara_rays_of_anguish);
     RegisterSpellScript(spell_kazzara_terror_claws);
     RegisterSpellScript(spell_kazzara_terror_claws_periodic);
     
