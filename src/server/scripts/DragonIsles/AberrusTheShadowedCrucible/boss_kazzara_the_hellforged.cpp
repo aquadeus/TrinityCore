@@ -672,7 +672,7 @@ struct at_kazzara_wings_of_extinction : AreaTriggerAI
 // 407069 - Rays of Anguish
 class spell_kazzara_rays_of_anguish : public AuraScript
 {
-    void CalculatePeriodic(AuraEffect const* aurEff, bool& isPeriodic, int32& amplitude)
+    void CalculatePeriodic(AuraEffect const* /*aurEff*/, bool& isPeriodic, int32& amplitude)
     {
         isPeriodic = true;
         amplitude = float(GetDuration()) /* / dreadrifts */;
