@@ -364,16 +364,13 @@ class spell_dru_eclipse_dummy : public AuraScript
         GetTarget()->m_Events.AddEventAtOffset(new InitializeEclipseCountersEvent(GetTarget(), aurEff->GetAmount()), 1s);
     }
 
-    void HandleRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    void HandleRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
     {
         GetTarget()->RemoveAura(SPELL_DRUID_ECLIPSE_SOLAR_SPELL_CNT);
         GetTarget()->RemoveAura(SPELL_DRUID_ECLIPSE_LUNAR_SPELL_CNT);
-    }
 
-    void OnOwnerOutOfCombat(bool isNowInCombat)
-    {
-        if (!isNowInCombat)
-            GetTarget()->CastSpell(GetTarget(), SPELL_DRUID_ECLIPSE_OOC, TRIGGERED_FULL_MASK);
+        spell_dru_eclipse_common::SetSpellCount(GetTarget(), SPELL_DRUID_ECLIPSE_SOLAR_SPELL_CNT, aurEff->GetAmount());
+        spell_dru_eclipse_common::SetSpellCount(GetTarget(), SPELL_DRUID_ECLIPSE_LUNAR_SPELL_CNT, aurEff->GetAmount());
     }
 
     void Register() override
@@ -381,7 +378,6 @@ class spell_dru_eclipse_dummy : public AuraScript
         AfterEffectApply += AuraEffectApplyFn(spell_dru_eclipse_dummy::HandleApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
         AfterEffectRemove += AuraEffectApplyFn(spell_dru_eclipse_dummy::HandleRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
         OnProc += AuraProcFn(spell_dru_eclipse_dummy::HandleProc);
-        OnEnterLeaveCombat += AuraEnterLeaveCombatFn(spell_dru_eclipse_dummy::OnOwnerOutOfCombat);
     }
 
 private:
@@ -407,35 +403,6 @@ private:
                 target->RemoveAura(otherCntSpellId);
             }
         }
-    }
-};
-
-// 329910 - Eclipse out of combat - SPELL_DRUID_ECLIPSE_OOC
-class spell_dru_eclipse_ooc : public AuraScript
-{
-    bool Validate(SpellInfo const* /*spellInfo*/) override
-    {
-        return ValidateSpellInfo({ SPELL_DRUID_ECLIPSE_DUMMY, SPELL_DRUID_ECLIPSE_SOLAR_SPELL_CNT, SPELL_DRUID_ECLIPSE_LUNAR_SPELL_CNT });
-    }
-
-    void Tick(AuraEffect const* /*aurEff*/)
-    {
-        Unit* owner = GetTarget();
-        AuraEffect const* auraEffDummy = owner->GetAuraEffect(SPELL_DRUID_ECLIPSE_DUMMY, EFFECT_0);
-        if (!auraEffDummy)
-            return;
-
-        if (!owner->IsInCombat() && (!owner->HasAura(SPELL_DRUID_ECLIPSE_SOLAR_SPELL_CNT) || !owner->HasAura(SPELL_DRUID_ECLIPSE_LUNAR_SPELL_CNT)))
-        {
-            // Restore 2 stacks to each spell when out of combat
-            spell_dru_eclipse_common::SetSpellCount(owner, SPELL_DRUID_ECLIPSE_SOLAR_SPELL_CNT, auraEffDummy->GetAmount());
-            spell_dru_eclipse_common::SetSpellCount(owner, SPELL_DRUID_ECLIPSE_LUNAR_SPELL_CNT, auraEffDummy->GetAmount());
-        }
-    }
-
-    void Register() override
-    {
-        OnEffectPeriodic += AuraEffectPeriodicFn(spell_dru_eclipse_ooc::Tick, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
     }
 };
 
@@ -1681,7 +1648,6 @@ void AddSC_druid_spell_scripts()
     RegisterSpellScript(spell_dru_earthwarden);
     RegisterSpellScript(spell_dru_eclipse_aura);
     RegisterSpellScript(spell_dru_eclipse_dummy);
-    RegisterSpellScript(spell_dru_eclipse_ooc);
     RegisterSpellAndAuraScriptPair(spell_dru_entangling_roots, spell_dru_entangling_roots_aura);
     RegisterSpellScript(spell_dru_ferocious_bite);
     RegisterSpellScript(spell_dru_forms_trinket);
