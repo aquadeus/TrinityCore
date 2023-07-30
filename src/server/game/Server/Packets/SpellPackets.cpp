@@ -856,6 +856,41 @@ WorldPacket const* SpellChannelStart::Write()
     return &_worldPacket;
 }
 
+WorldPacket const* SpellEmpowerStart::Write()
+{
+    _worldPacket << CastGUID;
+    _worldPacket << CasterGUID;
+    _worldPacket << int32(SpellID);
+    _worldPacket << Visual;
+    _worldPacket << uint32(EmpowerDuration);
+    _worldPacket << uint32(FirstStageDuration);
+    _worldPacket << uint32(FinalStageDuration);
+
+    for (TargetsCount const& target : Targets)
+    {
+        _worldPacket << target.Guid;
+        _worldPacket << target.Target;
+    }
+
+    for (StageCount const& stage : Stage)
+    {
+        _worldPacket << uint32(stage.StageDuration);
+        _worldPacket << uint32(stage.Stage);
+    }
+
+    _worldPacket.WriteBit(InterruptImmunities.has_value());
+    _worldPacket.WriteBit(HealPrediction.has_value());
+    _worldPacket.FlushBits();
+
+    if (InterruptImmunities)
+        _worldPacket << *InterruptImmunities;
+
+    if (HealPrediction)
+        _worldPacket << *HealPrediction;
+
+    return &_worldPacket;
+}
+
 WorldPacket const* SpellChannelUpdate::Write()
 {
     _worldPacket << CasterGUID;

@@ -494,6 +494,7 @@ class TC_GAME_API SpellInfo
         bool IsPositive() const;
         bool IsPositiveEffect(uint8 effIndex) const;
         bool IsChanneled() const;
+        bool IsEmpowered() const;
         bool IsMoveAllowedChannel() const;
         bool NeedsComboPoints() const;
         bool IsNextMeleeSwingSpell() const;

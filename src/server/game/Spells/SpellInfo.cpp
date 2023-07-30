@@ -1554,7 +1554,7 @@ bool SpellInfo::NeedsToBeTriggeredByCaster(SpellInfo const* triggeringSpell) con
     }
     */
 
-    if (triggeringSpell->IsChanneled())
+    if (triggeringSpell->IsChanneled() || triggeringSpell->IsEmpowered())
     {
         uint32 mask = 0;
         for (SpellEffectInfo const& effect : GetEffects())
@@ -1702,7 +1702,14 @@ bool SpellInfo::IsPositiveEffect(uint8 effIndex) const
 
 bool SpellInfo::IsChanneled() const
 {
-    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED));
+    SpellEmpowerEntry const* empowerSpell = sSpellEmpowerStore.LookupEntry(Id);
+    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED)) /*&& !sSpellEmpowerStore.HasRecord(empowerSpell->SpellID)*/;
+}
+
+bool SpellInfo::IsEmpowered() const
+{
+    //SpellEmpowerEntry const* empowerSpell = sSpellEmpowerStore.LookupEntry(Id);
+    return false;//IsChanneled() && sSpellEmpowerStore.HasRecord(empowerSpell->SpellID);
 }
 
 bool SpellInfo::IsMoveAllowedChannel() const

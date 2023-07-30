@@ -825,6 +825,39 @@ namespace WorldPackets
             uint32 ChannelDuration = 0;
         };
 
+        struct TargetsCount
+        {
+            ObjectGuid Guid;
+            ObjectGuid Target;
+        };
+
+        struct StageCount
+        {
+            uint32 StageDuration = 0;
+            uint32 Stage = 0;
+        };
+
+        class SpellEmpowerStart final : public ServerPacket
+        {
+        public:
+            SpellEmpowerStart() : ServerPacket(SMSG_SPELL_EMPOWER_START, 16 + 16 + 4 + 4 + 4 + 4) { }
+
+            WorldPacket const* Write() override;
+
+            ObjectGuid CastGUID;
+            ObjectGuid CasterGUID;
+            int32 SpellID = 0;
+            SpellCastVisual Visual;
+            uint32 EmpowerDuration = 0;
+            uint32 FirstStageDuration = 0;
+            uint32 FinalStageDuration = 0;
+            std::vector<TargetsCount> Targets;
+            std::vector<StageCount> Stage;
+            Optional<SpellChannelStartInterruptImmunities> InterruptImmunities;
+            Optional<SpellTargetedHealPrediction> HealPrediction;
+            
+        };
+
         class SpellChannelUpdate final : public ServerPacket
         {
         public:

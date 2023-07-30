@@ -11310,7 +11310,7 @@ struct SpellEmpowerStageMeta
     {
         { FT_INT, 1, true },
         { FT_INT, 1, true },
-        { FT_INT, 1, true },
+        { FT_INT, 1, false },
     };
 
     static constexpr DB2Meta Instance{ 4871072, -1, 3, 2, 0x6A138C60, Fields, 2 };

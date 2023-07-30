@@ -3558,6 +3558,21 @@ struct SpellEffectEntry
     SpellEffectAttributes GetEffectAttributes() const { return static_cast<SpellEffectAttributes>(EffectAttributes); }
 };
 
+struct SpellEmpowerEntry
+{
+    uint32 ID;
+    int32 SpellID;
+    int32 Field_10_0_0_44649_002;
+};
+
+struct SpellEmpowerStageEntry
+{
+    uint32 ID;
+    int32 Stage;
+    int32 DurationMS;
+    uint32 SpellEmpowerID;
+};
+
 struct SpellEquippedItemsEntry
 {
     uint32 ID;

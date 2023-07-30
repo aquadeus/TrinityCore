@@ -803,7 +803,7 @@ void Spell::SelectSpellTargets()
             }
         }
 
-        if (m_spellInfo->IsChanneled())
+        if (m_spellInfo->IsChanneled() || m_spellInfo->IsEmpowered())
         {
             // maybe do this for all spells?
             if (!focusObject && m_UniqueTargetInfo.empty() && m_UniqueGOTargetInfo.empty() && m_UniqueItemInfo.empty() && !m_targets.HasDst())
@@ -3225,7 +3225,7 @@ void Spell::DoSpellEffectHit(Unit* unit, SpellEffectInfo const& spellEffectInfo,
                             hitInfo.AuraDuration *= m_spellValue->DurationMul;
 
                             // Haste modifies duration of channeled spells
-                            if (m_spellInfo->IsChanneled())
+                            if (m_spellInfo->IsChanneled() || m_spellInfo->IsEmpowered())
                                 caster->ModSpellDurationTime(m_spellInfo, hitInfo.AuraDuration, this);
                             else if (m_spellInfo->HasAttribute(SPELL_ATTR8_HASTE_AFFECTS_DURATION))
                             {
@@ -3517,7 +3517,7 @@ SpellCastResult Spell::prepare(SpellCastTargets const& targets, AuraEffect const
     //Containers for channeled spells have to be set
     /// @todoApply this to all cast spells if needed
     // Why check duration? 29350: channelled triggers channelled
-    if ((_triggeredCastFlags & TRIGGERED_CAST_DIRECTLY) && (!m_spellInfo->IsChanneled() || !m_spellInfo->GetMaxDuration()))
+    if ((_triggeredCastFlags & TRIGGERED_CAST_DIRECTLY) && (!m_spellInfo->IsChanneled() || !m_spellInfo->IsEmpowered() || !m_spellInfo->GetMaxDuration()))
         cast(true);
     else
     {
@@ -3822,7 +3822,7 @@ void Spell::_cast(bool skipCheck)
             creatureCaster->ReleaseSpellFocus(this);
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
-    if ((m_spellInfo->HasHitDelay() && !m_spellInfo->IsChanneled()) || m_spellInfo->HasAttribute(SPELL_ATTR4_NO_HARMFUL_THREAT))
+    if ((m_spellInfo->HasHitDelay() && (!m_spellInfo->IsChanneled() || !m_spellInfo->IsEmpowered())) || m_spellInfo->HasAttribute(SPELL_ATTR4_NO_HARMFUL_THREAT))
     {
         // Remove used for cast item if need (it can be already NULL after TakeReagents call
         // in case delayed spell remove item at cast delay start
@@ -3965,6 +3965,29 @@ void Spell::handle_immediate()
         }
         else if (duration == -1)
             SendChannelStart(duration);
+
+        if (duration != 0)
+        {
+            m_spellState = SPELL_STATE_CASTING;
+            // GameObjects shouldn't cast channeled spells
+            ASSERT_NOTNULL(m_caster->ToUnit())->AddInterruptMask(m_spellInfo->ChannelInterruptFlags, m_spellInfo->ChannelInterruptFlags2);
+        }
+    }
+
+    // start empowering if applicable
+    if (m_spellInfo->IsEmpowered())
+    {
+        int32 duration = m_spellInfo->GetDuration();
+        if (duration > 0 || m_spellValue->Duration)
+        {
+            if (!m_spellValue->Duration)
+                m_caster->ModSpellDurationTime(m_spellInfo, duration, this);
+            else
+                duration = *m_spellValue->Duration;
+
+            m_channeledDuration = duration;
+            SendEmpowerStart(duration);
+        }
 
         if (duration != 0)
         {
@@ -4297,7 +4320,7 @@ void Spell::finish(SpellCastResult result)
     if (IsAutoRepeat() && unitCaster->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL) == this)
         m_spellState = SPELL_STATE_IDLE;
 
-    if (m_spellInfo->IsChanneled())
+    if (m_spellInfo->IsChanneled() || m_spellInfo->IsEmpowered())
         unitCaster->UpdateInterruptMask();
 
     if (unitCaster->HasUnitState(UNIT_STATE_CASTING) && !unitCaster->IsNonMeleeSpellCast(false, false, true))
@@ -4882,7 +4905,7 @@ void Spell::UpdateSpellCastDataTargets(WorldPackets::Spells::SpellCastData& data
         data.HitTargets.push_back(targetInfo.TargetGUID); // Always hits
 
     // Reset m_needAliveTargetMask for non channeled spell
-    if (!m_spellInfo->IsChanneled())
+    if (!m_spellInfo->IsChanneled() || !m_spellInfo->IsEmpowered())
         m_channelTargetEffectMask = 0;
 }
 
@@ -5182,6 +5205,78 @@ void Spell::SendChannelStart(uint32 duration)
         if (unitCaster->m_unitData->ChannelObjects.size() == 1 && unitCaster->m_unitData->ChannelObjects[0].IsUnit())
             if (!creatureCaster->HasSpellFocus(this))
                 creatureCaster->SetSpellFocus(this, ObjectAccessor::GetWorldObject(*creatureCaster, unitCaster->m_unitData->ChannelObjects[0]));
+
+    unitCaster->SetChannelSpellId(m_spellInfo->Id);
+    unitCaster->SetChannelVisual(m_SpellVisual);
+}
+
+void Spell::SendEmpowerStart(uint32 duration)
+{
+    // GameObjects don't empower
+    Unit* unitCaster = m_caster->ToUnit();
+    if (!unitCaster)
+        return;
+
+    WorldPackets::Spells::SpellEmpowerStart spellEmpowerStart;
+    spellEmpowerStart.CastGUID = m_castId;
+    spellEmpowerStart.CasterGUID = unitCaster->GetGUID();
+    spellEmpowerStart.SpellID = m_spellInfo->Id;
+    spellEmpowerStart.Visual = m_SpellVisual;
+    spellEmpowerStart.EmpowerDuration = duration;
+    spellEmpowerStart.FirstStageDuration = duration;
+    spellEmpowerStart.FinalStageDuration = duration;
+
+    unitCaster->SendMessageToSet(spellEmpowerStart.Write(), true);
+
+    uint32 schoolImmunityMask = unitCaster->GetSchoolImmunityMask();
+    uint32 mechanicImmunityMask = unitCaster->GetMechanicImmunityMask();
+
+    if (schoolImmunityMask || mechanicImmunityMask)
+    {
+        spellEmpowerStart.InterruptImmunities.emplace();
+        spellEmpowerStart.InterruptImmunities->SchoolImmunities = schoolImmunityMask;
+        spellEmpowerStart.InterruptImmunities->Immunities = mechanicImmunityMask;
+    }
+
+    m_timer = duration;
+
+    if (!m_targets.HasDst())
+    {
+        uint32 channelAuraMask = 0;
+        uint32 explicitTargetEffectMask = 0xFFFFFFFF;
+        // if there is an explicit target, only add channel objects from effects that also hit it
+        if (!m_targets.GetUnitTargetGUID().IsEmpty())
+        {
+            auto explicitTargetItr = std::find_if(m_UniqueTargetInfo.begin(), m_UniqueTargetInfo.end(), [&](TargetInfo const& target)
+            {
+                return target.TargetGUID == m_targets.GetUnitTargetGUID();
+            });
+            if (explicitTargetItr != m_UniqueTargetInfo.end())
+                explicitTargetEffectMask = explicitTargetItr->EffectMask;
+        }
+
+        for (SpellEffectInfo const& spellEffectInfo : m_spellInfo->GetEffects())
+            if (spellEffectInfo.IsEffect(SPELL_EFFECT_APPLY_AURA) && (explicitTargetEffectMask & (1u << spellEffectInfo.EffectIndex)))
+                channelAuraMask |= 1 << spellEffectInfo.EffectIndex;
+
+        for (TargetInfo const& target : m_UniqueTargetInfo)
+        {
+            if (!(target.EffectMask & channelAuraMask))
+                continue;
+
+            SpellAttr1 requiredAttribute = target.TargetGUID != unitCaster->GetGUID() ? SPELL_ATTR1_IS_CHANNELLED : SPELL_ATTR1_IS_SELF_CHANNELLED;
+            if (!m_spellInfo->HasAttribute(requiredAttribute))
+                continue;
+
+            unitCaster->AddChannelObject(target.TargetGUID);
+        }
+
+        for (GOTargetInfo const& target : m_UniqueGOTargetInfo)
+            if (target.EffectMask & channelAuraMask)
+                unitCaster->AddChannelObject(target.TargetGUID);
+    }
+    else if (m_spellInfo->HasAttribute(SPELL_ATTR1_IS_SELF_CHANNELLED))
+        unitCaster->AddChannelObject(unitCaster->GetGUID());
 
     unitCaster->SetChannelSpellId(m_spellInfo->Id);
     unitCaster->SetChannelVisual(m_SpellVisual);
@@ -8104,7 +8199,7 @@ bool Spell::IsPositive() const
 
 bool Spell::IsNeedSendToClient() const
 {
-    return m_SpellVisual.SpellXSpellVisualID || m_SpellVisual.ScriptVisualID || m_spellInfo->IsChanneled() ||
+    return m_SpellVisual.SpellXSpellVisualID || m_SpellVisual.ScriptVisualID || m_spellInfo->IsChanneled() || m_spellInfo->IsEmpowered() ||
         (m_spellInfo->HasAttribute(SPELL_ATTR8_AURA_SEND_AMOUNT)) || m_spellInfo->HasHitDelay() || (!m_triggeredByAuraSpell && !IsTriggered());
 }
 

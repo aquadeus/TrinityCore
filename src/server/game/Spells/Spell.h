@@ -537,6 +537,7 @@ class TC_GAME_API Spell
         void SendInterrupted(uint8 result);
         void SendChannelUpdate(uint32 time);
         void SendChannelStart(uint32 duration);
+        void SendEmpowerStart(uint32 duration);
         void SendResurrectRequest(Player* target);
 
         void HandleEffects(Unit* pUnitTarget, Item* pItemTarget, GameObject* pGoTarget, Corpse* pCorpseTarget, SpellEffectInfo const& spellEffectInfo, SpellEffectHandleMode mode);

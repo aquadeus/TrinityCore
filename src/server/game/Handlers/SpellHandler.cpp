@@ -409,7 +409,7 @@ void WorldSession::HandleCancelAuraOpcode(WorldPackets::Spells::CancelAura& canc
         return;
 
     // channeled spell case (it currently cast then)
-    if (spellInfo->IsChanneled())
+    if (spellInfo->IsChanneled() || spellInfo->IsEmpowered())
     {
         if (Spell* curSpell = _player->GetCurrentSpell(CURRENT_CHANNELED_SPELL))
             if (curSpell->GetSpellInfo()->Id == uint32(cancelAura.SpellID))
