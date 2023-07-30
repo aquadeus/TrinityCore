@@ -27,6 +27,7 @@
 #include "Pet.h"
 #include "SpellAuraEffects.h"
 #include "SpellHistory.h"
+#include "SpellInfo.h"
 #include "SpellMgr.h"
 #include "SpellScript.h"
 
@@ -41,6 +42,8 @@ enum HunterSpells
     SPELL_HUNTER_EXHILARATION_PET                   = 128594,
     SPELL_HUNTER_EXHILARATION_R2                    = 231546,
     SPELL_HUNTER_EXPLOSIVE_SHOT_DAMAGE              = 212680,
+    SPELL_HUNTER_KILL_COMMAND_CHARGE                = 118171,
+    SPELL_HUNTER_KILL_COMMAND_DAMAGE                = 83381,
     SPELL_HUNTER_LATENT_POISON_STACK                = 378015,
     SPELL_HUNTER_LATENT_POISON_DAMAGE               = 378016,
     SPELL_HUNTER_LATENT_POISON_INJECTORS_STACK      = 336903,
@@ -213,6 +216,72 @@ class spell_hun_hunting_party : public AuraScript
     void Register() override
     {
         OnEffectProc += AuraEffectProcFn(spell_hun_hunting_party::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+// 34026 - Kill Command 
+class spell_hun_kill_command : public SpellScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo ({ SPELL_HUNTER_KILL_COMMAND_CHARGE, SPELL_HUNTER_KILL_COMMAND_DAMAGE });
+    }
+
+    void HandleKillCommand(SpellEffIndex /*effIndex*/)
+    {
+        /* Formula
+        $bmMastery=$?s76657[${1+0.01*$76657m1}][${1}]
+        $lowNerf=${0.5+$min($pl,20)*0.025}
+        $beastMasterTalent=$?s378007[${1+($378007s1/100)}][${1}]
+        $impKC=$?s378010[${1+($378010s1/100)}][${1}]
+        $trainingExpert=$?s378209[${1+($378209s1/100)}][${1}]
+        $killerCommand=$?s378740[${1+($378740s1/100)}][${1}]
+        $damage=${$ap*($s2/100)*$<bmMastery>*$<trainingExpert>*$<beastMasterTalent>*$<impKC>*$<killerCommand>*(1+$@versadmg)*(1+($137015s1/100))}
+        */
+
+        Player* player = GetCaster()->ToPlayer();
+        int32 damage = 0;
+
+        float ap = CalculatePct(player->GetTotalAttackPowerValue(BASE_ATTACK), GetEffectInfo(EFFECT_1).CalcValue() / 100.0f);
+
+        float lowNerf = 0.5f + float(std::min(player->GetLevel(), uint8(20))) * 0.025f;
+        float beastMasterTalent = 0.0f;
+        float impKC = 0.0f;
+        float trainingExpert = 0.0f;
+        float killerCommand = 0.0f;
+        
+        float versatility = player->GetRatingBonusValue(CR_VERSATILITY_DAMAGE_DONE) + player->GetTotalAuraModifier(SPELL_AURA_MOD_VERSATILITY);
+        float beastMasterHunterAura = 0.0f;
+
+        if (AuraEffect const* mastery = player->GetAuraEffect(76657, EFFECT_0))
+            AddPct(ap, 0.01f * mastery->GetAmount());
+
+        if (AuraEffect const* beastMaster = player->GetAuraEffect(378007, EFFECT_0))
+            beastMasterTalent = 1.0f + (beastMaster->GetAmount() / 100.0f);
+
+        if (AuraEffect const* improvedKillCommand = player->GetAuraEffect(378010, EFFECT_0))
+            impKC = 1.0f + (improvedKillCommand->GetAmount() / 100.0f);
+
+        if (AuraEffect const* trainingExpertTalent = player->GetAuraEffect(378209, EFFECT_0))
+            trainingExpert = 1.0f + (trainingExpertTalent->GetAmount() / 100.0f);
+
+        if (AuraEffect const* killerCommandTalent = player->GetAuraEffect(378740, EFFECT_0))
+            killerCommand = 1.0f + (killerCommandTalent->GetAmount() / 100.0f);
+
+        if (AuraEffect const* beastMasterAura = player->GetAuraEffect(378007, EFFECT_0))
+            beastMasterHunterAura = 1.0f + (beastMasterAura->GetAmount() / 100.0f);
+
+        AddPct(damage, versatility);
+
+        //damage = ap * bmMastery /** lowNerf * trainingExpert * beastMasterTalent * impKC * killerCommand * versatility * beastMasterHunterAura*/;
+        
+        player->GetPet()->CastSpell(GetHitUnit(), SPELL_HUNTER_KILL_COMMAND_CHARGE, true);
+        player->GetPet()->CastSpell(GetHitUnit(), SPELL_HUNTER_KILL_COMMAND_DAMAGE, CastSpellExtraArgs(TRIGGERED_FULL_MASK).AddSpellMod(SPELLVALUE_BASE_POINT0, damage));
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_hun_kill_command::HandleKillCommand, EFFECT_0, SPELL_EFFECT_DUMMY);
     }
 };
 
@@ -787,6 +856,7 @@ void AddSC_hunter_spell_scripts()
     RegisterSpellScript(spell_hun_exhilaration);
     RegisterSpellScript(spell_hun_explosive_shot);
     RegisterSpellScript(spell_hun_hunting_party);
+    RegisterSpellScript(spell_hun_kill_command);
     RegisterSpellScript(spell_hun_last_stand_pet);
     RegisterSpellScript(spell_hun_latent_poison_damage);
     RegisterSpellScript(spell_hun_latent_poison_trigger);
