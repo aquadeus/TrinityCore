@@ -496,7 +496,6 @@ class TC_GAME_API SpellInfo
         bool IsChanneled() const;
         bool IsEmpowered() const;
         bool IsMoveAllowedChannel() const;
-        bool NeedsComboPoints() const;
         bool IsNextMeleeSwingSpell() const;
         bool IsRangedWeaponSpell() const;
         bool IsAutoRepeatRangedSpell() const;
