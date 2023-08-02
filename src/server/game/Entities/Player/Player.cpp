@@ -22240,6 +22240,10 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
         if (Spell* spell = GetCurrentSpell(CURRENT_CHANNELED_SPELL))
             if (spell->m_spellInfo->Id != spellid)
                 InterruptSpell(CURRENT_CHANNELED_SPELL, true);
+
+        if (Spell* spell = GetCurrentSpell(CURRENT_EMPOWERED_SPELL))
+            if (spell->m_spellInfo->Id != spellid)
+                InterruptSpell(CURRENT_EMPOWERED_SPELL, true);
     }
 
     uint32 sourcenode = nodes[0];

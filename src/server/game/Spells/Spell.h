@@ -26,6 +26,7 @@
 #include "Position.h"
 #include "SharedDefines.h"
 #include "SpellDefines.h"
+#include "SpellPackets.h"
 #include <memory>
 
 namespace WorldPackets
@@ -537,7 +538,7 @@ class TC_GAME_API Spell
         void SendInterrupted(uint8 result);
         void SendChannelUpdate(uint32 time);
         void SendChannelStart(uint32 duration);
-        void SendEmpowerStart(uint32 duration);
+        void SendEmpowerStart(uint32 duration, StageCount stage);
         void SendResurrectRequest(Player* target);
 
         void HandleEffects(Unit* pUnitTarget, Item* pItemTarget, GameObject* pGoTarget, Corpse* pCorpseTarget, SpellEffectInfo const& spellEffectInfo, SpellEffectHandleMode mode);

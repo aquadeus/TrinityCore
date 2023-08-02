@@ -2959,7 +2959,7 @@ void Unit::FinishSpell(CurrentSpellTypes spellType, SpellCastResult result /*= S
     if (!spell)
         return;
 
-    if (spellType == CURRENT_CHANNELED_SPELL)
+    if (spellType == CURRENT_CHANNELED_SPELL || CURRENT_EMPOWERED_SPELL)
         spell->SendChannelUpdate(0);
 
     spell->finish(result);

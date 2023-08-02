@@ -584,11 +584,12 @@ enum CurrentSpellTypes : uint8
     CURRENT_MELEE_SPELL             = 0,
     CURRENT_GENERIC_SPELL           = 1,
     CURRENT_CHANNELED_SPELL         = 2,
-    CURRENT_AUTOREPEAT_SPELL        = 3
+    CURRENT_AUTOREPEAT_SPELL        = 3,
+    CURRENT_EMPOWERED_SPELL         = 4
 };
 
 #define CURRENT_FIRST_NON_MELEE_SPELL 1
-#define CURRENT_MAX_SPELL             4
+#define CURRENT_MAX_SPELL             5
 
 #define UNIT_ACTION_BUTTON_ACTION(X) (uint32(X) & 0x00FFFFFF)
 #define UNIT_ACTION_BUTTON_TYPE(X)   ((uint32(X) & 0xFF000000) >> 24)

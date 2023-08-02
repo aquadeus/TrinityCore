@@ -3976,7 +3976,7 @@ void Spell::handle_immediate()
                 duration = *m_spellValue->Duration;
 
             m_channeledDuration = duration;
-            SendEmpowerStart(duration);
+            SendEmpowerStart(duration, 0);
         }
 
         if (duration != 0)
@@ -5190,12 +5190,16 @@ void Spell::SendChannelStart(uint32 duration)
     unitCaster->SetChannelVisual(m_SpellVisual);
 }
 
-void Spell::SendEmpowerStart(uint32 duration)
+void Spell::SendEmpowerStart(uint32 duration, StageCount stage)
 {
     // GameObjects don't empower
     Unit* unitCaster = m_caster->ToUnit();
     if (!unitCaster)
         return;
+
+    SpellEmpowerEntry const* spellEmpowerEntry = sSpellEmpowerStore.LookupEntry(m_spellInfo->Id);
+    SpellEmpowerStageEntry const* stageDuration = sSpellEmpowerStageStore.LookupEntry(spellEmpowerEntry->ID);
+    SpellEmpowerStageEntry const* empowerDuration = sSpellEmpowerStageStore.LookupEntry(stageDuration->SpellEmpowerID);
 
     WorldPackets::Spells::SpellEmpowerStart spellEmpowerStart;
     spellEmpowerStart.CastGUID = m_castId;
@@ -5203,8 +5207,10 @@ void Spell::SendEmpowerStart(uint32 duration)
     spellEmpowerStart.SpellID = m_spellInfo->Id;
     spellEmpowerStart.Visual = m_SpellVisual;
     spellEmpowerStart.EmpowerDuration = duration;
-    spellEmpowerStart.FirstStageDuration = duration;
-    spellEmpowerStart.FinalStageDuration = duration;
+    spellEmpowerStart.Stage.push_back(stage);
+    //spellEmpowerStart.FirstStageDuration = empowerDuration->DurationMS;
+    //spellEmpowerStart.FinalStageDuration = empowerDuration->DurationMS;
+
 
     unitCaster->SendMessageToSet(spellEmpowerStart.Write(), true);
 
@@ -7996,6 +8002,8 @@ CurrentSpellTypes Spell::GetCurrentContainer() const
         return CURRENT_AUTOREPEAT_SPELL;
     else if (m_spellInfo->IsChanneled())
         return CURRENT_CHANNELED_SPELL;
+    else if (m_spellInfo->IsEmpowered())
+        return CURRENT_EMPOWERED_SPELL;
 
     return CURRENT_GENERIC_SPELL;
 }

@@ -1702,14 +1702,12 @@ bool SpellInfo::IsPositiveEffect(uint8 effIndex) const
 
 bool SpellInfo::IsChanneled() const
 {
-    SpellEmpowerEntry const* empowerSpell = sSpellEmpowerStore.LookupEntry(Id);
-    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED)) /*&& !sSpellEmpowerStore.HasRecord(empowerSpell->SpellID)*/;
+    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED));
 }
 
 bool SpellInfo::IsEmpowered() const
 {
-    //SpellEmpowerEntry const* empowerSpell = sSpellEmpowerStore.LookupEntry(Id);
-    return false;//IsChanneled() && sSpellEmpowerStore.HasRecord(empowerSpell->SpellID);
+    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED));
 }
 
 bool SpellInfo::IsMoveAllowedChannel() const
