@@ -860,13 +860,14 @@ WorldPacket const* SpellEmpowerStart::Write()
 {
     _worldPacket << CastGUID;
     _worldPacket << CasterGUID;
+    _worldPacket << uint32(TargetsCount);
     _worldPacket << int32(SpellID);
     _worldPacket << Visual;
     _worldPacket << uint32(EmpowerDuration);
     _worldPacket << uint32(FirstStageDuration);
     _worldPacket << uint32(FinalStageDuration);
 
-    for (TargetsCount const& target : Targets)
+    for (TargetsCountList const& target : Targets)
     {
         _worldPacket << target.Guid;
         _worldPacket << target.Target;

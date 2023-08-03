@@ -825,7 +825,7 @@ namespace WorldPackets
             uint32 ChannelDuration = 0;
         };
 
-        struct TargetsCount
+        struct TargetsCountList
         {
             ObjectGuid Guid;
             ObjectGuid Target;
@@ -846,12 +846,13 @@ namespace WorldPackets
 
             ObjectGuid CastGUID;
             ObjectGuid CasterGUID;
+            uint32 TargetsCount = 0;
             int32 SpellID = 0;
             SpellCastVisual Visual;
             uint32 EmpowerDuration = 0;
             uint32 FirstStageDuration = 0;
             uint32 FinalStageDuration = 0;
-            std::vector<TargetsCount> Targets;
+            std::vector<TargetsCountList> Targets;
             std::vector<StageCount> Stage;
             Optional<SpellChannelStartInterruptImmunities> InterruptImmunities;
             Optional<SpellTargetedHealPrediction> HealPrediction;

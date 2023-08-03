@@ -1702,12 +1702,12 @@ bool SpellInfo::IsPositiveEffect(uint8 effIndex) const
 
 bool SpellInfo::IsChanneled() const
 {
-    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED));
+    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED)) && !IsEmpowered();
 }
 
 bool SpellInfo::IsEmpowered() const
 {
-    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED));
+    return HasAttribute(SpellAttr1(SPELL_ATTR1_IS_CHANNELLED | SPELL_ATTR1_IS_SELF_CHANNELLED)) && HasAttribute(SpellAttr13(SPELL_ATTR13_UNK27)) && SpellFamilyName == SPELLFAMILY_EVOKER;
 }
 
 bool SpellInfo::IsMoveAllowedChannel() const
