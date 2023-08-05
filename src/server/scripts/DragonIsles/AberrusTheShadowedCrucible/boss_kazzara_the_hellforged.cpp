@@ -194,7 +194,7 @@ struct boss_kazzara_the_hellforged : public BossAI
                 scheduler.Schedule(1s + 500ms, [this](TaskContext /*context*/)
                 {
                     std::vector<Creature*> sunderedMobs;
-                    GetCreatureListWithOptionsInGrid(sunderedMobs, me, 60.0f, FindCreatureOptions().SetStringId("sundered_mob"));
+                    GetCreatureListWithOptionsInGrid(sunderedMobs, me, 60.0f, { .StringId = "sundered_mob" });
                     for (Creature* sunderedMob : sunderedMobs)
                     {
                         if (!sunderedMob->IsAlive() || sunderedMob->IsInCombat())
@@ -675,18 +675,42 @@ class spell_kazzara_rays_of_anguish : public AuraScript
     void CalculatePeriodic(AuraEffect const* /*aurEff*/, bool& isPeriodic, int32& amplitude)
     {
         isPeriodic = true;
-        amplitude = float(GetDuration()) /* / dreadrifts */;
+        amplitude = float(GetDuration() / _riftCount);
     }
 
     void UpdateSpecAura(AuraEffect const* aurEff)
     {
-        // TODO
+        // GetUnitTargetCountForEffect(spell->GetEffect(EFFECT_0)) TODO
     }
 
     void Register() override
     {
         DoEffectCalcPeriodic += AuraEffectCalcPeriodicFn(spell_kazzara_rays_of_anguish::CalculatePeriodic, EFFECT_1, SPELL_AURA_DUMMY);
         OnEffectPeriodic += AuraEffectPeriodicFn(spell_kazzara_rays_of_anguish::UpdateSpecAura, EFFECT_1, SPELL_AURA_DUMMY);
+    }
+
+public:
+    void GetRiftsCount(int64 count)
+    {
+        _riftCount = count;
+    }
+
+private:
+    int64 _riftCount;
+};
+
+class spell_kazzara_rays_of_anguish_rift_selector : public SpellScript
+{
+    void HandleHit(SpellEffIndex effIndex)
+    {
+        if (Aura* aura = GetCaster()->GetAura(SPELL_RAYS_OF_ANGUISH))
+            if (spell_kazzara_rays_of_anguish* script = aura->GetScript<spell_kazzara_rays_of_anguish>())
+                script->GetRiftsCount(GetUnitTargetCountForEffect(effIndex));
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_kazzara_rays_of_anguish_rift_selector::HandleHit, EFFECT_0, SPELL_EFFECT_DUMMY);
     }
 };
 
@@ -701,8 +725,9 @@ void AddSC_boss_kazzara_the_hellforged()
     RegisterSpellScript(spell_kazzara_dread_rifts);
     RegisterSpellScript(spell_kazzara_energize);
     RegisterSpellScript(spell_kazzara_hellbeam_consume_energy);
-    RegisterSpellScript(spell_kazzara_ray_of_anguish_trigger);
     RegisterSpellScript(spell_kazzara_rays_of_anguish);
+    RegisterSpellScript(spell_kazzara_rays_of_anguish_rift_selector);
+    RegisterSpellScript(spell_kazzara_ray_of_anguish_trigger);
     RegisterSpellScript(spell_kazzara_terror_claws);
     RegisterSpellScript(spell_kazzara_terror_claws_periodic);
     
