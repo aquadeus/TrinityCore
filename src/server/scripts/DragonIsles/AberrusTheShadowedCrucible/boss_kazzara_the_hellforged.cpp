@@ -559,7 +559,7 @@ public:
     }
 
 private:
-    uint8 _targetsAffectedNum;
+    uint8 _targetsAffectedNum = 0;
 };
 
 // 407068 - Rays of Anguish
