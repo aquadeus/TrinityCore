@@ -437,6 +437,30 @@ namespace WorldPackets
 
             uint32 GarrPlotInstanceID = 0;
         };
+
+        class GarrisonAssignFollowerToBuilding final : public ClientPacket
+        {
+        public:
+            GarrisonAssignFollowerToBuilding(WorldPacket&& packet) : ClientPacket(CMSG_GARRISON_ASSIGN_FOLLOWER_TO_BUILDING, std::move(packet)) { }
+
+            void Read() override;
+
+            ObjectGuid NpcGUID;
+            uint32 PlotInstanceID = 0;
+            uint64 FollowerDBID = 0;
+        };
+
+        class GarrisonAssignFollowerToBuildingResult final : public ServerPacket
+        {
+        public:
+            GarrisonAssignFollowerToBuildingResult() : ServerPacket(SMSG_GARRISON_ASSIGN_FOLLOWER_TO_BUILDING_RESULT, 8 + 4 + 4) { }
+
+            WorldPacket const* Write() override;
+
+            uint64 FollowerDBID = 0;
+            uint32 Result = 0;
+            uint32 PlotInstanceID = 0;
+        };
     }
 }
 

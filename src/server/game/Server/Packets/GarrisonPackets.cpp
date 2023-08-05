@@ -481,4 +481,20 @@ WorldPacket const* GarrisonBuildingActivated::Write()
 
     return &_worldPacket;
 }
+
+void GarrisonAssignFollowerToBuilding::Read()
+{
+    _worldPacket >> NpcGUID;
+    _worldPacket >> PlotInstanceID;
+    _worldPacket >> FollowerDBID;
+}
+
+WorldPacket const* GarrisonAssignFollowerToBuildingResult::Write()
+{
+    _worldPacket << uint64(FollowerDBID);
+    _worldPacket << uint32(Result);
+    _worldPacket << uint32(PlotInstanceID);
+
+    return &_worldPacket;
+}
 }

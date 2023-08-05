@@ -263,6 +263,7 @@ public:
     void SendRemoteInfo() const;
     void SendBlueprintAndSpecializationData();
     void SendMapData(Player* receiver) const;
+    void AssignFollowerToBuilding(uint32 garrFollowerId, uint32 garrPlotInstanceId);
 
     void ResetFollowerActivationLimit() { _followerActivationsRemainingToday = 1; }
 

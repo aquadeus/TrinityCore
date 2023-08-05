@@ -853,3 +853,14 @@ bool Garrison::Follower::HasAbility(uint32 garrAbilityId) const
         return garrAbility->ID == garrAbilityId;
     }) != PacketInfo.AbilityID.end();
 }
+
+void Garrison::AssignFollowerToBuilding(uint32 garrFollowerId, uint32 garrPlotInstanceId)
+{
+    WorldPackets::Garrison::GarrisonAssignFollowerToBuildingResult assignFollowerToBuilding;
+    assignFollowerToBuilding.FollowerDBID = garrFollowerId;
+    assignFollowerToBuilding.Result = 0;
+    assignFollowerToBuilding.PlotInstanceID = garrPlotInstanceId;
+    _owner->SendDirectMessage(assignFollowerToBuilding.Write());
+
+  //  _owner->UpdateCriteria(CriteriaType::RecruitGarrisonFollower, follower.PacketInfo.DbID);
+}

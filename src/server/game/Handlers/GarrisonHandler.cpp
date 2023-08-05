@@ -55,3 +55,9 @@ void WorldSession::HandleGarrisonGetMapData(WorldPackets::Garrison::GarrisonGetM
     if (Garrison* garrison = _player->GetGarrison())
         garrison->SendMapData(_player);
 }
+
+void WorldSession::HandleGarrisonAssignFollowerToBuilding(WorldPackets::Garrison::GarrisonAssignFollowerToBuilding& garrisonAssignFollowerToBuilding)
+{
+    if (Garrison* garrison = _player->GetGarrison())
+        garrison->AssignFollowerToBuilding(garrisonAssignFollowerToBuilding.FollowerDBID, garrisonAssignFollowerToBuilding.PlotInstanceID);
+}
