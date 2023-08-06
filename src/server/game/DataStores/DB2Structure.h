@@ -3199,6 +3199,35 @@ struct QuestV2Entry
     int32 UiQuestDetailsTheme;
 };
 
+struct QuestV2CliTaskEntry
+{
+    uint32 ID;
+    int64 FiltRaces;
+    LocalizedString QuestTitle;
+    LocalizedString BulletText;
+    uint16 UniqueBitFlag;
+    uint32 ConditionID;
+    uint32 FiltActiveQuest;
+    int16 FiltClasses;
+    uint32 FiltCompletedQuestLogic;
+    uint32 FiltMaxFactionID;
+    uint32 FiltMaxFactionValue;
+    uint32 FiltMinFactionID;
+    uint32 FiltMinFactionValue;
+    uint32 FiltMinSkillID;
+    uint32 FiltMinSkillValue;
+    uint32 FiltNonActiveQuest;
+    uint32 BreadCrumbID;
+    int32 StartItem;
+    int32 WorldStateExpressionID;
+    uint32 QuestInfoID;
+    int32 ContentTuningID;
+    int32 CovenantID;
+    int32 Field_9_0_2_36206_022;
+    std::array<int32, 3> Flags;
+    std::array<uint32, 3> FiltCompletedQuest;
+};
+
 struct QuestXPEntry
 {
     uint32 ID;

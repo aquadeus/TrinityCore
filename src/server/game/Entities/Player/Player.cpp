@@ -7454,6 +7454,8 @@ void Player::UpdateArea(uint32 newArea)
     PhasingHandler::OnAreaChange(this);
     UpdateAreaDependentAuras(newArea);
 
+    sWorldQuestMgr->HandlePlayerUpdateArea(this, newArea);
+
     if (IsAreaThatActivatesPvpTalents(newArea))
         EnablePvpRules();
     else
@@ -9093,6 +9095,9 @@ void Player::SendInitWorldStates(uint32 zoneId, uint32 areaId)
     packet.SubareaID = areaId;
 
     sWorldStateMgr->FillInitialWorldStates(packet, GetMap(), areaId);
+    sWorldQuestMgr->FillInitialWorldStates(packet, GetMap(), areaId);
+
+    sWorldQuestMgr->SendWorldQuestUpdate(this);
 
     SendDirectMessage(packet.Write());
 }
@@ -14539,6 +14544,26 @@ bool Player::CanAddQuest(Quest const* quest, bool msg) const
             return false;
         }
     }
+
+    if (auto questV2CliEntry = sQuestV2CliTaskStore.LookupEntry(quest->ID))
+    {
+        if (questV2CliEntry->RequiredSkillID != 0)
+        {
+            if (!HasSkill(questV2CliEntry->RequiredSkillID))
+                return false;
+
+            if (GetSkillValue(questV2CliEntry->RequiredSkillID) < questV2CliEntry->RequiredSkillMinValue)
+                return false;
+        }
+
+        if (!(questV2CliEntry->RequiredRaceMask & getRaceMask()) || !(questV2CliEntry->RequiredClassMask & getClassMask()))
+            return false;
+
+        for (uint16 i : questV2CliEntry->RequiredQuestID)
+            if (i != 0 && GetQuestStatus(uint32(i)) != QUEST_STATUS_REWARDED)
+                return false;
+    }
+
     return true;
 }
 
