@@ -2911,6 +2911,11 @@ std::vector<SpecializationSpellsEntry const*> const* DB2Manager::GetSpecializati
     return Trinity::Containers::MapGetValuePtr(_specializationSpellsBySpec, specId);
 }
 
+SpellEmpowerStageEntry const* DB2Manager::GetSpellEmpowerStageInfo(int32 stage, int32 durationMs, uint32 spellEmpowerId) const
+{
+    return Trinity::Containers::MapGetValuePtr(_spellEmpowerStages, { stage, durationMs, spellEmpowerId });
+}
+
 bool DB2Manager::IsSpecSetMember(int32 specSetId, uint32 specId) const
 {
     return _specsBySpecSet.count(std::make_pair(specSetId, specId)) > 0;

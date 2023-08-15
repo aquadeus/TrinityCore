@@ -497,6 +497,7 @@ public:
     std::vector<SkillRaceClassInfoEntry const*> GetSkillRaceClassInfo(uint32 skill) const;
     SoulbindConduitRankEntry const* GetSoulbindConduitRank(int32 soulbindConduitId, int32 rank) const;
     std::vector<SpecializationSpellsEntry const*> const* GetSpecializationSpells(uint32 specId) const;
+    SpellEmpowerStageEntry const* GetSpellEmpowerStageInfo(int32 stage, int32 durationMs, uint32 spellEmpowerId) const;
     bool IsSpecSetMember(int32 specSetId, uint32 specId) const;
     static bool IsValidSpellFamiliyName(SpellFamilyNames family);
     std::vector<SpellProcsPerMinuteModEntry const*> GetSpellProcsPerMinuteMods(uint32 spellprocsPerMinuteId) const;
