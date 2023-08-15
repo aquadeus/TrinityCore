@@ -6646,6 +6646,15 @@ float Unit::SpellDamagePctDone(Unit* victim, SpellInfo const* spellProto, Damage
     else if (spellProto->Mechanic)
         AddPct(DoneTotalMod, GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DAMAGE_DONE_FOR_MECHANIC, spellProto->Mechanic));
 
+    if (TempSummon const* summon = ToTempSummon())
+    {
+        if (Unit* summoner = summon->GetSummonerUnit())
+        {
+            AddPct(DoneTotalMod, summoner->GetTotalAuraMultiplierByMiscMask(SPELL_AURA_MOD_SUMMON_DAMAGE, spellProto->SchoolMask));
+            DoneTotalMod *= GetTotalAuraMultiplierByMiscMask(SPELL_AURA_531, spellProto->SchoolMask);
+        }
+    }
+
     // Custom scripted damage
     switch (spellProto->SpellFamilyName)
     {
@@ -7521,6 +7530,15 @@ int32 Unit::MeleeDamageBonusDone(Unit* pVictim, int32 damage, WeaponAttackType a
                 maxModDamagePercentSchool = GetTotalAuraMultiplierByMiscMask(SPELL_AURA_MOD_DAMAGE_PERCENT_DONE, schoolMask);
 
             DoneTotalMod *= maxModDamagePercentSchool;
+        }
+
+        if (TempSummon const* summon = ToTempSummon())
+        {
+            if (Unit* summoner = summon->GetSummonerUnit())
+            {
+                AddPct(DoneTotalMod, summoner->GetTotalAuraMultiplierByMiscMask(SPELL_AURA_MOD_SUMMON_DAMAGE, schoolMask));
+                DoneTotalMod *= GetTotalAuraMultiplierByMiscMask(SPELL_AURA_531, schoolMask);
+            }
         }
     }
 

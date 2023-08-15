@@ -1748,6 +1748,11 @@ void Spell::SelectImplicitCasterObjectTargets(SpellEffectInfo const& spellEffect
                 if (vehicleBase->IsVehicle())
                     target = vehicleBase->GetVehicleKit()->GetPassenger(targetType.GetTarget() - TARGET_UNIT_PASSENGER_0);
             break;
+        case TARGET_UNIT_TARGET_PASSENGER:
+            if (Creature* vehicleBase = m_caster->ToCreature())
+                if (vehicleBase->IsVehicle())
+                    target = vehicleBase->GetVehicleKit()->GetPassenger(TARGET_UNIT_PASSENGER_0);
+            break;
         case TARGET_UNIT_TARGET_TAP_LIST:
             if (Creature* creatureCaster = m_caster->ToCreature())
                 if (!creatureCaster->GetTapList().empty())

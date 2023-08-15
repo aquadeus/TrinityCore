@@ -496,7 +496,7 @@ NonDefaultConstructible<pAuraEffectHandler> AuraEffectHandler[TOTAL_AURAS]=
     &AuraEffect::HandleNULL,                                      //426
     &AuraEffect::HandleNULL,                                      //427 SPELL_AURA_SCALE_PLAYER_LEVEL
     &AuraEffect::HandleLinkedSummon,                              //428 SPELL_AURA_LINKED_SUMMON
-    &AuraEffect::HandleNULL,                                      //429 SPELL_AURA_MOD_SUMMON_DAMAGE
+    &AuraEffect::HandleNoImmediateEffect,                                      //429 SPELL_AURA_MOD_SUMMON_DAMAGE
     &AuraEffect::HandlePlayScene,                                 //430 SPELL_AURA_PLAY_SCENE
     &AuraEffect::HandleModOverrideZonePVPType,                    //431 SPELL_AURA_MOD_OVERRIDE_ZONE_PVP_TYPE
     &AuraEffect::HandleNULL,                                      //432
@@ -598,7 +598,7 @@ NonDefaultConstructible<pAuraEffectHandler> AuraEffectHandler[TOTAL_AURAS]=
     &AuraEffect::HandleNULL,                                      //528 SPELL_AURA_ALLOW_BLOCKING_SPELLS
     &AuraEffect::HandleNULL,                                      //529 SPELL_AURA_MOD_SPELL_BLOCK_CHANCE
     &AuraEffect::HandleNULL,                                      //530
-    &AuraEffect::HandleNULL,                                      //531
+    &AuraEffect::HandleNoImmediateEffect,                                      //531
     &AuraEffect::HandleNULL,                                      //532
     &AuraEffect::HandleNULL,                                      //533 SPELL_AURA_DISABLE_NAVIGATION
     &AuraEffect::HandleNULL,                                      //534
