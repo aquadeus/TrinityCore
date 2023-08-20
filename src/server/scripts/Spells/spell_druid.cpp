@@ -26,7 +26,7 @@
 #include "Containers.h"
 #include "DB2Stores.h"
 #include "GridNotifiersImpl.h"
-#include "PassiveAI.h"
+#include "ObjectAccessor.h"
 #include "Player.h"
 #include "Spell.h"
 #include "SpellAuraEffects.h"
@@ -96,6 +96,7 @@ enum DruidSpells
     SPELL_DRUID_MANGLE                         = 33917,
     SPELL_DRUID_MASS_ENTANGLEMENT              = 102359,
     SPELL_DRUID_MOONFIRE_DAMAGE                = 164812,
+    SPELL_DRUID_POWER_OF_THE_ARCHDRUID         = 392302,
     SPELL_DRUID_PROWL                          = 5215,
     SPELL_DRUID_REJUVENATION                   = 774,
     SPELL_DRUID_REJUVENATION_GERMINATION       = 155777,
@@ -514,21 +515,18 @@ class spell_dru_efflorescence : public SpellScript
         GetCaster()->RemoveAreaTrigger(GetSpellInfo()->Id);
     }
 
+    void InitSummon()
+    {
+        for (SpellLogEffectGenericVictimParams const& summonedObject : GetSpell()->GetExecuteLogEffectTargets(SPELL_EFFECT_SUMMON, &SpellLogEffect::GenericVictimTargets))
+            if (Unit* summon = ObjectAccessor::GetCreature(*GetCaster(), summonedObject.Victim))
+                summon->CastSpell(summon, SPELL_DRUID_EFFLORESCENCE_AURA,
+                    CastSpellExtraArgs().SetTriggeringSpell(GetSpell()));
+    }
+
     void Register() override
     {
         OnEffectLaunch += SpellEffectFn(spell_dru_efflorescence::RemoveOldAreaTrigger, EFFECT_2, SPELL_EFFECT_CREATE_AREATRIGGER);
-    }
-};
-
-struct npc_dru_efflorescence : public NullCreatureAI
-{
-    explicit npc_dru_efflorescence(Creature* creature) : NullCreatureAI(creature)
-    {
-    }
-
-    void InitializeAI() override
-    {
-        me->CastSpell(me, SPELL_DRUID_EFFLORESCENCE_AURA);
+        AfterCast += SpellCastFn(spell_dru_efflorescence::InitSummon);
     }
 };
 
@@ -1090,7 +1088,7 @@ class spell_dru_luxuriant_soil : public AuraScript
         float spellRange = eventInfo.GetSpellInfo()->GetMaxRange();
 
         std::vector<Unit*> targetList;
-        Trinity::WorldObjectSpellNearbyTargetCheck check(spellRange, rejuvCaster, eventInfo.GetSpellInfo(), TARGET_CHECK_ALLY, nullptr, TARGET_OBJECT_TYPE_UNIT);
+        Trinity::WorldObjectSpellAreaTargetCheck check(spellRange, rejuvCaster, rejuvCaster, rejuvCaster, eventInfo.GetSpellInfo(), TARGET_CHECK_ALLY, nullptr, TARGET_OBJECT_TYPE_UNIT);
         Trinity::UnitListSearcher searcher(rejuvCaster, targetList, check);
         Cell::VisitAllObjects(rejuvCaster, searcher, spellRange);
 
@@ -1144,6 +1142,54 @@ class spell_dru_omen_of_clarity : public AuraScript
     void Register() override
     {
         OnEffectProc += AuraEffectProcFn(spell_dru_omen_of_clarity::HandleProc, EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+    }
+};
+
+// 392303 - Power of the Archdruid
+class spell_dru_power_of_the_archdruid : public AuraScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellEffect({ { SPELL_DRUID_POWER_OF_THE_ARCHDRUID, EFFECT_0 } });
+    }
+
+    static bool CheckProc(AuraEffect const* /*aurEff*/, ProcEventInfo const& eventInfo)
+    {
+        return eventInfo.GetActor()->HasAuraEffect(SPELL_DRUID_POWER_OF_THE_ARCHDRUID, EFFECT_0);
+    }
+
+    static void HandleProc(AuraEffect const* aurEff, ProcEventInfo const& eventInfo)
+    {
+        Unit* druid = eventInfo.GetActor();
+        Unit const* procTarget = eventInfo.GetActionTarget();
+
+        // range is EFFECT_0's BasePoints.
+        float spellRange = aurEff->GetAmount();
+
+        std::vector<Unit*> targetList;
+        Trinity::WorldObjectSpellAreaTargetCheck checker(spellRange, procTarget, druid, druid, eventInfo.GetSpellInfo(), TARGET_CHECK_ALLY, nullptr, TARGET_OBJECT_TYPE_UNIT);
+        Trinity::UnitListSearcher searcher(procTarget, targetList, checker);
+        Cell::VisitAllObjects(procTarget, searcher, spellRange);
+        std::erase(targetList, procTarget);
+
+        if (targetList.empty())
+            return;
+
+        AuraEffect const* powerOfTheArchdruidEffect = druid->GetAuraEffect(SPELL_DRUID_POWER_OF_THE_ARCHDRUID, EFFECT_0);
+
+        // max. targets is SPELL_DRUID_POWER_OF_THE_ARCHDRUID's EFFECT_0 BasePoints.
+        int32 maxTargets = powerOfTheArchdruidEffect->GetAmount();
+
+        Trinity::Containers::RandomResize(targetList, maxTargets);
+
+        for (Unit* chosenTarget : targetList)
+            druid->CastSpell(chosenTarget, eventInfo.GetProcSpell()->GetSpellInfo()->Id, aurEff);
+    }
+
+    void Register() override
+    {
+        DoCheckEffectProc += AuraCheckEffectProcFn(spell_dru_power_of_the_archdruid::CheckProc, EFFECT_0, SPELL_AURA_DUMMY);
+        OnEffectProc += AuraEffectProcFn(spell_dru_power_of_the_archdruid::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
     }
 };
 
@@ -1942,7 +1988,6 @@ void AddSC_druid_spell_scripts()
     RegisterSpellScript(spell_dru_eclipse_aura);
     RegisterSpellScript(spell_dru_eclipse_dummy);
     RegisterSpellScript(spell_dru_eclipse_ooc);
-    RegisterCreatureAI(npc_dru_efflorescence);
     RegisterSpellScript(spell_dru_efflorescence);
     RegisterSpellScript(spell_dru_efflorescence_dummy);
     RegisterSpellScript(spell_dru_efflorescence_heal);
@@ -1963,6 +2008,7 @@ void AddSC_druid_spell_scripts()
     RegisterSpellScript(spell_dru_luxuriant_soil);
     RegisterSpellScript(spell_dru_moonfire);
     RegisterSpellScript(spell_dru_omen_of_clarity);
+    RegisterSpellScript(spell_dru_power_of_the_archdruid);
     RegisterSpellScript(spell_dru_prowl);
     RegisterSpellScript(spell_dru_rip);
     RegisterSpellAndAuraScriptPair(spell_dru_savage_roar, spell_dru_savage_roar_aura);
