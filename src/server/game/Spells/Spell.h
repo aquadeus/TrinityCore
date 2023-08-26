@@ -420,6 +420,7 @@ class TC_GAME_API Spell
         void EffectCreateTraitTreeConfig();
         void EffectChangeActiveCombatTraitConfig();
         void EffectTeleportGraveyard();
+        void EffectSetChromieTime();
 
         typedef std::unordered_set<Aura*> UsedSpellMods;
 

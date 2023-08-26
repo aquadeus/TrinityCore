@@ -2840,6 +2840,14 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         bool CanEnableWarModeInArea() const;
         void UpdateWarModeAuras();
 
+        void SetChromieTimeExpansion(uint8 chromieTimeExpansion, uint16 expansionLevelMask, uint8 field, uint16 contentTuningConditionMask)
+        {
+            SetUpdateFieldValue(m_values.ModifyValue(&Player::m_activePlayerData).ModifyValue(&UF::ActivePlayerData::UiChromieTimeExpansionID), chromieTimeExpansion);
+            SetUpdateFieldValue(m_values.ModifyValue(&Player::m_playerData).ModifyValue(&UF::PlayerData::CtrOptions).ModifyValue(&UF::CTROptions::ExpansionLevelMask), expansionLevelMask);
+            SetUpdateFieldValue(m_values.ModifyValue(&Player::m_playerData).ModifyValue(&UF::PlayerData::CtrOptions).ModifyValue(&UF::CTROptions::Field_4), field);
+            SetUpdateFieldValue(m_values.ModifyValue(&Player::m_playerData).ModifyValue(&UF::PlayerData::CtrOptions).ModifyValue(&UF::CTROptions::ContentTuningConditionMask), contentTuningConditionMask);
+        }
+
         std::string GetDebugInfo() const override;
 
         UF::UpdateField<UF::PlayerData, 0, TYPEID_PLAYER> m_playerData;

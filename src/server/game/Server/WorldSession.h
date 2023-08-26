@@ -548,6 +548,7 @@ namespace WorldPackets
         class TrainerBuySpell;
         class RequestStabledPets;
         class SetPetSlot;
+        class ChromieTimeSelectExpansion;
     }
 
     namespace Party
@@ -1407,6 +1408,7 @@ class TC_GAME_API WorldSession
         void HandleBinderActivateOpcode(WorldPackets::NPC::Hello& packet);
         void HandleRequestStabledPets(WorldPackets::NPC::RequestStabledPets& packet);
         void HandleSetPetSlot(WorldPackets::NPC::SetPetSlot& setPetSlot);
+        void HandleChromieTimeSelectExpansionOpcode(WorldPackets::NPC::ChromieTimeSelectExpansion& selectExpansion);
 
         void HandleCanDuel(WorldPackets::Duel::CanDuel& packet);
         void HandleDuelResponseOpcode(WorldPackets::Duel::DuelResponse& duelResponse);

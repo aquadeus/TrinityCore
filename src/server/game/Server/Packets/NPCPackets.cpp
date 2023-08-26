@@ -261,4 +261,10 @@ void SetPetSlot::Read()
     _worldPacket >> DestSlot;
     _worldPacket >> StableMaster;
 }
+
+void ChromieTimeSelectExpansion::Read()
+{
+    _worldPacket >> GUID;
+    _worldPacket >> Expansion;
+}
 }

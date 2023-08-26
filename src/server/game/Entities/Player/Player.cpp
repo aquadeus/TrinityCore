@@ -14173,8 +14173,6 @@ void Player::OnGossipSelect(WorldObject* source, int32 gossipOptionId, uint32 me
             break;
         case GossipOptionNpc::GarrisonRecruitment: // NYI
             break;
-        case GossipOptionNpc::ChromieTimeNpc: // NYI
-            break;
         case GossipOptionNpc::RuneforgeLegendaryCrafting: // NYI
             break;
         case GossipOptionNpc::RuneforgeLegendaryUpgrade: // NYI
