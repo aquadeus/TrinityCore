@@ -73,7 +73,7 @@ enum class GossipOptionNpc : uint8
     UIItemInteraction          = 37,   /*NYI*/ // White chat bubble
     WorldMap                   = 38,   /*NYI*/ // White chat bubble
     Soulbind                   = 39,   /*NYI*/ // White chat bubble
-    ChromieTimeNpc             = 40,   /*NYI*/ // White chat bubble
+    ChromieTimeNpc             = 40,   // White chat bubble
     CovenantPreviewNpc         = 41,   /*NYI*/ // White chat bubble
     RuneforgeLegendaryCrafting = 42,   /*NYI*/ // White chat bubble
     NewPlayerGuide             = 43,   /*NYI*/ // White chat bubble

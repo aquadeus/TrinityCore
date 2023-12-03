@@ -6112,6 +6112,29 @@ struct TransportRotationLoadInfo
     static constexpr DB2LoadInfo Instance{ Fields, 7, &TransportRotationMeta::Instance, HOTFIX_SEL_TRANSPORT_ROTATION };
 };
 
+struct UiChromieTimeExpansionInfoLoadInfo
+{
+    static constexpr DB2FieldMeta Fields[14] =
+    {
+        { false, FT_INT, "ID" },
+        { false, FT_STRING, "Name" },
+        { false, FT_STRING, "Description" },
+        { false, FT_STRING, "DescriptionAlliance" },
+        { false, FT_STRING, "DescriptionHorde" },
+        { true, FT_INT, "SpellID" },
+        { true, FT_INT, "MapAtlasElement" },
+        { true, FT_INT, "PreviewAtlasElement" },
+        { true, FT_INT, "ShowPlayerConditionID" },
+        { true, FT_INT, "ExpansionMask" },
+        { true, FT_INT, "ContentTuningID" },
+        { true, FT_INT, "CompletedPlayerConditionID" },
+        { true, FT_INT, "SortPriority" },
+        { true, FT_INT, "RecommendPlayerConditionID" },
+    };
+
+    static constexpr DB2LoadInfo Instance{ Fields, 14, & UIChromieTimeExpansionInfoMeta::Instance, HOTFIX_SEL_UI_CHROMIE_TIME_EXPANSION_INFO };
+};
+
 struct UiMapLoadInfo
 {
     static constexpr DB2FieldMeta Fields[14] =

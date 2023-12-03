@@ -414,3 +414,23 @@ void WorldSession::HandleRepairItemOpcode(WorldPackets::Item::RepairItem& packet
         _player->DurabilityRepairAll(true, discountMod, packet.UseGuildBank);
     }
 }
+
+void WorldSession::HandleChromieTimeSelectExpansionOpcode(WorldPackets::NPC::ChromieTimeSelectExpansion& selectedExpansion)
+{
+    _player->PlayerTalkClass->SendCloseGossip();
+
+    UiChromieTimeExpansionInfoEntry const* expansion = sUiChromieTimeExpansionInfoStore.LookupEntry(selectedExpansion.Expansion);
+    _player->CastSpell(_player, expansion->SpellID, true);
+
+    WorldPackets::NPC::ChromieTimeSelectExpansionSuccess selectExpansionSuccess;
+    SendPacket(selectExpansionSuccess.Write());
+ }
+ 
+ void WorldSession::SendChromieTimeOpenNpc(ObjectGuid npc)
+{
+    WorldPackets::NPC::NPCInteractionOpenResult npcInteraction;
+    npcInteraction.Npc = npc;
+    npcInteraction.InteractionType = PlayerInteractionType::ChromieTime;
+    npcInteraction.Success = true;
+    SendPacket(npcInteraction.Write());
+}

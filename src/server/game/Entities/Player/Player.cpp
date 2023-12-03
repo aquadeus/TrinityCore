@@ -14094,6 +14094,7 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId, bool showQues
                 case GossipOptionNpc::Mailbox:
                 case GossipOptionNpc::Transmogrify:
                 case GossipOptionNpc::AzeriteRespec:
+                case GossipOptionNpc::ChromieTimeNpc:
                 case GossipOptionNpc::PersonalTabardVendor:
                     break;                                         // No checks
                 case GossipOptionNpc::CemeterySelect:
@@ -14275,8 +14276,6 @@ void Player::OnGossipSelect(WorldObject* source, int32 gossipOptionId, uint32 me
         case GossipOptionNpc::GarrisonTradeskillNpc: // NYI
             break;
         case GossipOptionNpc::GarrisonRecruitment: // NYI
-            break;
-        case GossipOptionNpc::ChromieTimeNpc: // NYI
             break;
         case GossipOptionNpc::RuneforgeLegendaryCrafting: // NYI
             break;
