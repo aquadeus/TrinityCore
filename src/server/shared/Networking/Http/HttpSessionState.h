@@ -15,25 +15,21 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRINITY_BASE64_H
-#define TRINITY_BASE64_H
+#ifndef TRINITYCORE_HTTP_SESSION_STATE_H
+#define TRINITYCORE_HTTP_SESSION_STATE_H
 
-#include "Define.h"
-#include "Optional.h"
-#include <string>
-#include <string_view>
-#include <vector>
+#include "Duration.h"
+#include <boost/asio/ip/address.hpp>
+#include <boost/uuid/uuid.hpp>
 
-namespace Trinity
+namespace Trinity::Net::Http
 {
-namespace Encoding
+struct SessionState
 {
-struct TC_COMMON_API Base64
-{
-    static std::string Encode(std::vector<uint8> const& data);
-    static Optional<std::vector<uint8>> Decode(std::string_view data);
+    boost::uuids::uuid Id = { };
+    boost::asio::ip::address RemoteAddress;
+    TimePoint InactiveTimestamp = TimePoint::max();
 };
 }
-}
 
-#endif
+#endif // TRINITYCORE_HTTP_SESSION_STATE_H

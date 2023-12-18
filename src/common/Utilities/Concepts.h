@@ -15,25 +15,19 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRINITY_BASE64_H
-#define TRINITY_BASE64_H
+#ifndef TRINITYCORE_CONCEPTS_H
+#define TRINITYCORE_CONCEPTS_H
 
-#include "Define.h"
-#include "Optional.h"
-#include <string>
-#include <string_view>
-#include <vector>
+#include <concepts>
+#include <functional> // std::invoke
 
 namespace Trinity
 {
-namespace Encoding
+template <typename Callable, typename R, typename... Args>
+concept invocable_r = requires(Callable && callable, Args&&... args)
 {
-struct TC_COMMON_API Base64
-{
-    static std::string Encode(std::vector<uint8> const& data);
-    static Optional<std::vector<uint8>> Decode(std::string_view data);
+    { std::invoke(static_cast<Callable&&>(callable), static_cast<Args&&>(args)...) } -> std::convertible_to<R>;
 };
 }
-}
 
-#endif
+#endif // TRINITYCORE_CONCEPTS_H
