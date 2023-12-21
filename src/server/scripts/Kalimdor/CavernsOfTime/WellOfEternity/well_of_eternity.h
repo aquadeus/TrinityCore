@@ -39,18 +39,21 @@ enum WOEDataTypes
 enum WOECreatureIds
 {
     // Bosses
-    BOSS_PEROTHARN     = 55085,
-    BOSS_QUEEN_AZSHARA = 54853,
-    BOSS_MANNOROTH     = 54969,
+    BOSS_PEROTHARN        = 55085,
+    BOSS_QUEEN_AZSHARA    = 54853,
+    BOSS_MANNOROTH        = 54969,
 
     // NPCs
-    NPC_NOZDORMU       = 55624,
-    NPC_VAROTHEN       = 55419
+    NPC_NOZDORMU          = 55624,
+    NPC_VAROTHEN          = 55419,
+
+    NPC_FIRE_WALL_STALKER = 56096
 };
 
 enum WOEGameObjectIds
 {
-    GO_COURTYARD_DOOR = 210084
+    GO_LARGE_FIRE_WALL_DOOR = 210234,
+    GO_COURTYARD_DOOR       = 210084
 };
 
 enum WOESharedActions

@@ -31,7 +31,25 @@ enum NozdormuTexts
 
 enum Actions
 {
-    ACTION_NOZDORMU_INTRO = 0
+    ACTION_NOZDORMU_INTRO = 1
+};
+
+enum Spells
+{
+    SPELL_SUMMON_FIRE_WALL                   = 105243,
+    SPELL_SUMMON_FEL_FIREWALL_COSMETIC       = 105247,
+    SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE = 105250
+};
+
+static Position const firewallPos[7] =
+{
+    { 3204.6145f, -4935.3647f, 194.41118f },
+    { 3182.0986f, -4933.1196f, 194.41118f },
+    { 3201.0647f, -4937.5664f, 194.41118f },
+    { 3185.1438f, -4935.9785f, 194.41118f },
+    { 3197.0664f, -4938.774f,  194.41118f },
+    { 3188.825f,  -4937.952f,  194.41118f },
+    { 3192.8916f, -4938.9053f, 194.41118f },
 };
 
 // 55624 - Nozdormu
@@ -49,13 +67,13 @@ struct npc_woe_nozdormu : public ScriptedAI
                 {
                     Talk(SAY_INTRO_1);
 
-                    scheduler.Schedule(12s + 970ms, [this](TaskContext /*context*/)
+                    scheduler.Schedule(12s + 970ms, [this](TaskContext context)
                     {
                         Talk(SAY_INTRO_2);
-                        scheduler.Schedule(5s + 950ms, [this](TaskContext /*context*/)
+                        context.Schedule(5s + 950ms, [this](TaskContext context)
                         {
                             Talk(SAY_INTRO_3);
-                            scheduler.Schedule(12s + 230ms, [this](TaskContext /*context*/)
+                            context.Schedule(12s + 230ms, [this](TaskContext /*context*/)
                             {
                                 Talk(SAY_INTRO_4);
                             });
@@ -79,6 +97,75 @@ private:
     TaskScheduler scheduler;
     InstanceScript* _instance;
     bool _intro = false;
+};
+
+enum LegionDemonSpells
+{
+    SPELL_STRIKE_FEAR = 103913
+};
+
+enum LegionDemonEvents
+{
+    EVENT_STRIKE_FEAR = 1
+};
+
+// 55503 - Legion Demon
+struct npc_woe_legion_demon : public ScriptedAI
+{
+    npc_woe_legion_demon(Creature* creature) : ScriptedAI(creature) { }
+
+    void JustEngagedWith(Unit* /*who*/) override
+    {
+        events.ScheduleEvent(EVENT_STRIKE_FEAR, 7s);
+    }
+
+    void WaypointReached(uint32 waypointId, uint32 /*pathId*/) override
+    {
+        if (!me->HasStringId("legion_demon_woe_intro"))
+            return;
+
+        if (waypointId == 3)
+        {
+            if (Creature* stalker = me->FindNearestCreature(NPC_FIRE_WALL_STALKER, 25.0f))
+                stalker->CastSpell(stalker, SPELL_SUMMON_FEL_FIREWALL_COSMETIC, TRIGGERED_FULL_MASK);
+
+            DoCast(SPELL_SUMMON_FIRE_WALL);
+        }
+    }
+
+    void JustDied(Unit* /*killer*/) override
+    {
+        if (GameObject* go = me->FindNearestGameObject(GO_LARGE_FIRE_WALL_DOOR, 75.0f))
+            go->SetGoState(GO_STATE_DESTROYED);
+
+        if (GameObject* go = me->FindNearestGameObject(GO_COURTYARD_DOOR, 75.0f))
+            go->SetGoState(GO_STATE_DESTROYED);
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        if (!UpdateVictim())
+            return;
+
+        events.Update(diff);
+
+        if (me->HasUnitState(UNIT_STATE_CASTING))
+            return;
+
+        switch (events.ExecuteEvent())
+        {
+            case EVENT_STRIKE_FEAR:
+                DoCast(SPELL_STRIKE_FEAR);
+                events.ScheduleEvent(EVENT_STRIKE_FEAR, 7s);
+                break;
+            default:
+                break;
+        }
+
+        DoMeleeAttackIfReady();
+    }
+private:
+    EventMap events;
 };
 
 // Areatrigger - 7387
@@ -115,9 +202,79 @@ public:
     }
 };
 
+// 105247 - Summon Fel Firewall Cosmetic PH
+class spell_woe_summon_fel_firewall_cosmetic_ph : public AuraScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE });
+    }
+
+    void HandlePeriodic(AuraEffect const* aurEff)
+    {
+        switch (aurEff->GetTickNumber())
+        {
+            case 1:
+            {
+                GetTarget()->CastSpell(firewallPos[0], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                GetTarget()->CastSpell(firewallPos[1], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                break;
+            }
+            case 2:
+            {
+                GetTarget()->CastSpell(firewallPos[2], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                GetTarget()->CastSpell(firewallPos[3], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                break;
+            }
+            case 3:
+            {
+                GetTarget()->CastSpell(firewallPos[4], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                GetTarget()->CastSpell(firewallPos[5], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                break;
+            }
+            case 4:
+            {
+                GetTarget()->CastSpell(firewallPos[6], SPELL_SUMMON_FEL_FIREWALL_COSMETIC_PULSE, TRIGGERED_FULL_MASK);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+    {
+        if (GameObject* go = GetTarget()->FindNearestGameObject(GO_LARGE_FIRE_WALL_DOOR, 15.0f))
+            go->SetGoState(GO_STATE_READY);
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(spell_woe_summon_fel_firewall_cosmetic_ph::HandlePeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+        AfterEffectRemove += AuraEffectRemoveFn(spell_woe_summon_fel_firewall_cosmetic_ph::OnRemove, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// 105243 - Summon Fire Wall
+class spell_woe_summon_fire_wall : public SpellScript
+{
+    void HandleAfterCast()
+    {
+        GetCaster()->ToCreature()->SetImmuneToPC(false);
+    }
+
+    void Register() override
+    {
+        AfterCast += SpellCastFn(spell_woe_summon_fire_wall::HandleAfterCast);
+    }
+};
+
 void AddSC_well_of_eternity()
 {
     RegisterWellOfEternityCreatureAI(npc_woe_nozdormu);
+    RegisterWellOfEternityCreatureAI(npc_woe_legion_demon);
+    RegisterSpellScript(spell_woe_summon_fel_firewall_cosmetic_ph);
+    RegisterSpellScript(spell_woe_summon_fire_wall);
     new at_woe_nozdormu_intro();
     new at_woe_perotharn_intro();
 }
