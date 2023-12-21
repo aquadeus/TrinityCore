@@ -112,7 +112,16 @@ enum LegionDemonEvents
 // 55503 - Legion Demon
 struct npc_woe_legion_demon : public ScriptedAI
 {
-    npc_woe_legion_demon(Creature* creature) : ScriptedAI(creature) { }
+    npc_woe_legion_demon(Creature* creature) : ScriptedAI(creature)
+    {
+        Initialize();
+    }
+
+    void Initialize()
+    {
+        if (me->HasStringId("legion_demon_woe_intro"))
+            me->SetImmuneToPC(true);
+    }
 
     void JustEngagedWith(Unit* /*who*/) override
     {
