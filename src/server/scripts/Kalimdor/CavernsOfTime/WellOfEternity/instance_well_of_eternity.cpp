@@ -21,15 +21,18 @@
 
 ObjectData const creatureData[] =
 {
-    { NPC_PEROTHARN,    BOSS_PEROTHARN  },
-    { 0,                0               } // END
+    { BOSS_PEROTHARN,     DATA_PEROTHARN     },
+    { BOSS_QUEEN_AZSHARA, DATA_QUEEN_AZSHARA },
+    { BOSS_MANNOROTH,     DATA_MANNOROTH     },
+    { NPC_NOZDORMU,       DATA_NOZDORMU      },
+    { 0,                  0                  }  // END
 };
 
 DungeonEncounterData const encounters[] =
 {
-    { BOSS_PEROTHARN,       {{ 1272 }}  },
-    { BOSS_QUEEN_AZSHARA,   {{ 1273 }}  },
-    { BOSS_MANNOROTH,       {{ 1274 }}  }
+    { DATA_PEROTHARN,       {{ 1272 }}  },
+    { DATA_QUEEN_AZSHARA,   {{ 1273 }}  },
+    { DATA_MANNOROTH,       {{ 1274 }}  }
 };
 
 class instance_well_of_eternity : public InstanceMapScript

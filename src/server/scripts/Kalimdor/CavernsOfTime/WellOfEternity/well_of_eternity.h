@@ -25,18 +25,39 @@ constexpr char const* WoEScriptName = "instance_well_of_eternity";
 
 constexpr uint32 const EncounterCount = 3;
 
-enum WoEDataTypes
+enum WOEDataTypes
 {
     // Encounters
-    BOSS_PEROTHARN              = 0,
-    BOSS_QUEEN_AZSHARA          = 1,
-    BOSS_MANNOROTH              = 2
+    DATA_PEROTHARN          = 0,
+    DATA_QUEEN_AZSHARA      = 1,
+    DATA_MANNOROTH          = 2,
+
+    // Other Datas
+    DATA_NOZDORMU           = 3
 };
 
-enum WoECreatureIds
+enum WOECreatureIds
 {
     // Bosses
-    NPC_PEROTHARN = 55085
+    BOSS_PEROTHARN          = 55085,
+    BOSS_QUEEN_AZSHARA      = 54853,
+    BOSS_MANNOROTH          = 54969,
+
+    // NPCs
+    NPC_NOZDORMU            = 55624,
+    NPC_VAROTHEN            = 55419,
+    NPC_FIRE_WALL_STALKER   = 56096
+};
+
+enum WOEGameObjectIds
+{
+    GO_LARGE_FIRE_WALL_DOOR = 210234,
+    GO_COURTYARD_DOOR       = 210084
+};
+
+enum WOESharedActions
+{
+    ACTION_PEROTHARN_INTRO = 1
 };
 
 template <class AI, class T>
