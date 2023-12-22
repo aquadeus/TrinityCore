@@ -15,23 +15,30 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRINITY_CRYPTO_CONSTANTS_H
-#define TRINITY_CRYPTO_CONSTANTS_H
+#ifndef _Hour_of_Twilight_h__
+#define _Hour_of_Twilight_h__
 
-#include "Define.h"
+#include "CreatureAIImpl.h"
 
-namespace Trinity
+constexpr char const* DataHeader = "HOT";
+constexpr char const* HoTScriptName = "instance_hour_of_twilight";
+
+constexpr uint32 const EncounterCount = 3;
+
+enum TotFWDataTypes
 {
-namespace Crypto
+    // Encounters
+    BOSS_ARCURION               = 0,
+    BOSS_ASIRA_DAWNSLAYER       = 1,
+    BOSS_ARCHBISHOP_BENEDICTUS  = 2
+};
+
+template <class AI, class T>
+inline AI* GetGetHourOfTwilightAI(T* obj)
 {
-    struct Constants
-    {
-        static constexpr size_t MD5_DIGEST_LENGTH_BYTES = 16;
-        static constexpr size_t SHA1_DIGEST_LENGTH_BYTES = 20;
-        static constexpr size_t SHA256_DIGEST_LENGTH_BYTES = 32;
-        static constexpr size_t SHA512_DIGEST_LENGTH_BYTES = 64;
-    };
-}
+    return GetInstanceAI<AI>(obj, HoTScriptName);
 }
 
-#endif
+#define RegisterHourOfTwilightAI(ai_name) RegisterCreatureAIWithFactory(ai_name, GetGetHourOfTwilightAI)
+
+#endif // _Hour_of_Twilight_h__

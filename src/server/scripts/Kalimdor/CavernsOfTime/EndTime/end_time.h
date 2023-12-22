@@ -15,23 +15,38 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRINITY_CRYPTO_CONSTANTS_H
-#define TRINITY_CRYPTO_CONSTANTS_H
+#ifndef _End_Time_h__
+#define _End_Time_h__
 
-#include "Define.h"
+#include "CreatureAIImpl.h"
 
-namespace Trinity
+constexpr char const* DataHeader = "ET";
+constexpr char const* ETScriptName = "instance_end_time";
+
+constexpr uint32 const EncounterCount = 5;
+
+enum ETWDataTypes
 {
-namespace Crypto
+    // Encounters
+    BOSS_ECHO_OF_BAINE      = 0,
+    BOSS_ECHO_OF_SYLVANAS   = 1,
+    BOSS_ECHO_OF_JAINA      = 2,
+    BOSS_ECHO_OF_TYRANDE    = 3,
+    BOSS_MUROZOND           = 4
+};
+
+enum ETCreatureIds
 {
-    struct Constants
-    {
-        static constexpr size_t MD5_DIGEST_LENGTH_BYTES = 16;
-        static constexpr size_t SHA1_DIGEST_LENGTH_BYTES = 20;
-        static constexpr size_t SHA256_DIGEST_LENGTH_BYTES = 32;
-        static constexpr size_t SHA512_DIGEST_LENGTH_BYTES = 64;
-    };
-}
+    // Bosses
+    NPC_MUROZOND            = 54432
+};
+
+template <class AI, class T>
+inline AI* GetEndTimeAI(T* obj)
+{
+    return GetInstanceAI<AI>(obj, ETScriptName);
 }
 
-#endif
+#define RegisterEndTimeCreatureAI(ai_name) RegisterCreatureAIWithFactory(ai_name, GetEndTimeAI)
+
+#endif // _End_Time_h__
