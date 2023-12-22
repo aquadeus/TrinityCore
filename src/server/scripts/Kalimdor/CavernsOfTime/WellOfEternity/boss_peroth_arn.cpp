@@ -50,7 +50,17 @@ enum PerotharnTexts
 // 55085 - Peroth'arn
 struct boss_peroth_arn : public BossAI
 {
-    boss_peroth_arn(Creature* creature) : BossAI(creature, DATA_PEROTHARN) { }
+    boss_peroth_arn(Creature* creature) : BossAI(creature, DATA_PEROTHARN)
+    {
+        Initialize();
+    }
+
+    void Initialize()
+    {
+        // Peroth'arn is spawned twice, intro spawn can be targeted
+        if (me->HasStringId("peroth_arn_woe_intro"))
+            me->SetUninteractible(true);
+    }
 
     void DoAction(int32 actionId) override
     {

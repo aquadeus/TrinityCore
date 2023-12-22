@@ -13,10 +13,17 @@ DELETE FROM `creature_addon` WHERE `guid` = @CGUID+0;
 INSERT INTO `creature_addon` (`guid`, `path_id`, `mount`, `StandState`, `AnimTier`, `VisFlags`, `SheathState`, `PvpFlags`, `emote`, `aiAnimKit`, `movementAnimKit`, `meleeAnimKit`, `visibilityDistanceType`, `auras`) VALUES
 (@CGUID+0, 0, 0, 0, 3, 1, 1, 0, 0, 0, 0, 0, 0, '49414'); -- Alurmi - 49414 - Generic Quest Invisibility 1
 
+DELETE FROM `creature_addon` WHERE `guid` = 358828;
+INSERT INTO `creature_addon` (`guid`, `path_id`, `mount`, `StandState`, `AnimTier`, `VisFlags`, `SheathState`, `PvpFlags`, `emote`, `aiAnimKit`, `movementAnimKit`, `meleeAnimKit`, `visibilityDistanceType`, `auras`) VALUES
+(358828, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, '105915 110231'); -- Illidan Stormrage - 105915 - Shadowcloak
+
 UPDATE `creature_template` SET `ScriptName` = 'npc_woe_nozdormu' WHERE `entry` = 55624;
 UPDATE `creature_template` SET `BaseAttackTime`=2001980, `unit_flags`=2181071616, `unit_flags2`=4194304, `unit_flags3`=1, `ScriptName`='boss_peroth_arn' WHERE `entry`=55085; -- Peroth'arn
 UPDATE `creature_template` SET `unit_flags`=64, `unit_flags2`=4196352, `ScriptName`='npc_woe_legion_demon' WHERE `entry`=55503; -- Legion Demon
 UPDATE `creature_template_addon` SET `VisFlags`=1 WHERE `entry`=57864; -- 57864 (Alurmi) - Generic Quest Invisibility 1
+UPDATE `creature_template` SET `unit_flags3`=1 WHERE `entry`=56389; -- Shadowcloak Illidan Helper Stalker PH
+UPDATE `creature_template` SET `unit_flags3`=1 WHERE `entry`=55154; -- Shadowcloak Helper Stalker PH
+UPDATE `creature_template` SET `unit_flags`=32768, `unit_flags2`=2099200 WHERE `entry`=55500; -- Illidan Stormrage
 
 DELETE FROM `creature_template_gossip` WHERE (`CreatureID`=55624 AND `MenuID`=13412);
 INSERT INTO `creature_template_gossip` (`CreatureID`, `MenuID`, `VerifiedBuild`) VALUES
@@ -30,14 +37,21 @@ DELETE FROM `creature_template_difficulty` WHERE (`DifficultyID`=2 AND `Entry` =
 INSERT INTO `creature_template_difficulty` (`Entry`, `DifficultyID`, `HealthScalingExpansion`, `HealthModifier`, `ManaModifier`, `CreatureDifficultyID`, `TypeFlags`, `TypeFlags2`) VALUES
 (57864, 2, 3, 2, 1, 26030, 0, 0); -- Alurmi
 
-DELETE FROM `creature_template_addon` WHERE `entry` IN (55654);
+DELETE FROM `creature_template_addon` WHERE `entry` IN (55654, 56389);
 INSERT INTO `creature_template_addon` (`entry`, `path_id`, `mount`, `StandState`, `AnimTier`, `VisFlags`, `SheathState`, `PvpFlags`, `emote`, `aiAnimKit`, `movementAnimKit`, `meleeAnimKit`, `visibilityDistanceType`, `auras`) VALUES
-(55654, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, '110048 107877'); -- 55654 (Corrupted Arcanist) - Corrupted Night Elf Eyes, Disciplined Caster
+(55654, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 4, '110048 107877'), -- 55654 (Corrupted Arcanist) - Corrupted Night Elf Eyes, Disciplined Caster
+(56389, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, '105924'); -- 56389 (Shadowcloak Illidan Helper Stalker PH) - Shadowcloak Illidan Stalker Cosmetic
+
+
+DELETE FROM `creature_template_movement` WHERE `CreatureId`=56389;
+INSERT INTO `creature_template_movement` (`CreatureId`, `Ground`, `Swim`, `Flight`, `Rooted`, `Chase`, `Random`, `InteractionPauseTimer`) VALUES
+(56389, NULL, NULL, 1, 1, NULL, NULL, NULL);
 
 UPDATE `creature` SET `StringId` = 'legion_demon_woe_intro' WHERE `guid` = 358739;
 UPDATE `creature` SET `StringId` = 'dreadlord_defender_woe_intro_1' WHERE `guid` = 358724;
 UPDATE `creature` SET `StringId` = 'dreadlord_defender_woe_intro_2' WHERE `guid` = 358728;
 UPDATE `creature` SET `StringId` = 'corrupted_arcanist_woe_intro' WHERE `guid` = 358730;
+UPDATE `creature` SET `StringId` = 'peroth_arn_woe_intro' WHERE `guid` = 358741;
 
 DELETE FROM `creature_text` WHERE `CreatureID` IN (55624, 55085);
 INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Language`, `Probability`, `Emote`, `Duration`, `Sound`, `BroadcastTextId`, `TextRange`, `comment`) VALUES
@@ -48,6 +62,14 @@ INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Lan
 (55085, 0, 0, 'He is near, lurking in the shadows... I can sense it.', 12, 0, 100, 0, 0, 26118, 54683, 2, 'Peroth\'arn to Player'),
 (55085, 1, 0, 'You, Felguard.  Hold this area.', 12, 0, 100, 0, 0, 26120, 54685, 2, 'Peroth\'arn to Player'),
 (55085, 2, 0, 'The rest of you, secure the courtyard.', 12, 0, 100, 0, 0, 26121, 54687, 2, 'Peroth\'arn to Player');
+
+DELETE FROM `vehicle_template_accessory` WHERE (`entry`=55500 AND `seat_id`=0);
+INSERT INTO `vehicle_template_accessory` (`entry`, `accessory_entry`, `seat_id`, `minion`, `description`, `summontype`, `summontimer`) VALUES
+(55500, 56389, 0, 1, 'Illidan Stormrage - Shadowcloak Illidan Helper Stalker PH', 8, 0); -- Illidan Stormrage - Shadowcloak Illidan Helper Stalker PH
+
+DELETE FROM `npc_spellclick_spells` WHERE `npc_entry`=55500 AND `spell_id`=46598;
+INSERT INTO `npc_spellclick_spells` (`npc_entry`, `spell_id`, `cast_flags`, `user_type`) VALUES
+(55500, 46598, 0, 0);
 
 -- Areatriggers
 DELETE FROM `areatrigger_scripts` WHERE `entry`IN (7387, 7029);

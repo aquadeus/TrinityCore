@@ -21,6 +21,7 @@
 #include "Unit.h"
 #include "well_of_eternity.h"
 
+/*---------- INTRO START -----------*/
 enum NozdormuTexts
 {
     SAY_INTRO_1 = 0,
@@ -277,6 +278,8 @@ class spell_woe_summon_fire_wall : public SpellScript
         AfterCast += SpellCastFn(spell_woe_summon_fire_wall::HandleAfterCast);
     }
 };
+
+/*---------- INTRO END -----------*/
 
 void AddSC_well_of_eternity()
 {
