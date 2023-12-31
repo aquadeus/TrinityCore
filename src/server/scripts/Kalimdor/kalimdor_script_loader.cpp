@@ -57,7 +57,11 @@ void AddSC_instance_end_time();
 // CoT Hour of Twilight
 void AddSC_instance_hour_of_twilight();
 // CoT Well of Eternity
+void AddSC_boss_mannoroth_and_varo_then();
+void AddSC_boss_peroth_arn();
+void AddSC_boss_queen_azshara();
 void AddSC_instance_well_of_eternity();
+void AddSC_well_of_eternity();
 // Dire Maul
 void AddSC_instance_dire_maul();
 // Dragon Soul
@@ -115,12 +119,6 @@ void AddSC_vortex_pinnacle();
 // Wailing caverns
 void AddSC_wailing_caverns();
 void AddSC_instance_wailing_caverns();
-// Well of Eternity
-void AddSC_boss_mannoroth_and_varo_then();
-void AddSC_boss_peroth_arn();
-void AddSC_boss_queen_azshara();
-void AddSC_instance_well_of_eternity();
-void AddSC_well_of_eternity();
 // Zul'Farrak
 void AddSC_boss_zum_rah();
 void AddSC_zulfarrak();
@@ -204,7 +202,11 @@ void AddKalimdorScripts()
     // CoT Hour of Twilight
     AddSC_instance_hour_of_twilight();
     // CoT Well of Eternity
+    AddSC_boss_mannoroth_and_varo_then();
+    AddSC_boss_peroth_arn();
+    AddSC_boss_queen_azshara();
     AddSC_instance_well_of_eternity();
+    AddSC_well_of_eternity();
     // Dire Maul
     AddSC_instance_dire_maul();
     // Dragon Soul
@@ -262,12 +264,6 @@ void AddKalimdorScripts()
     // Wailing caverns
     AddSC_wailing_caverns();
     AddSC_instance_wailing_caverns();
-    // Well of Eternity
-    AddSC_boss_mannoroth_and_varo_then();
-    AddSC_boss_peroth_arn();
-    AddSC_boss_queen_azshara();
-    AddSC_instance_well_of_eternity();
-    AddSC_well_of_eternity();
     // Zul'Farrak
     AddSC_boss_zum_rah();
     AddSC_zulfarrak();

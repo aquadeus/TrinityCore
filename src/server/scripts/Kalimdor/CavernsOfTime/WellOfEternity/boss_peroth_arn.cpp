@@ -33,10 +33,10 @@ enum PerotharnSpells
 
 enum PerotharnIntroPaths
 {
-    PATH_DREADLORD_DEFENDER_1 = (358724 * 10) << 3,
-    PATH_DREADLORD_DEFENDER_2 = (358728 * 10) << 3,
-    PATH_CORRUPTED_ARCANIST   = (358730 * 10) << 3,
-    PATH_LEGION_DEMON         = (358739 * 10) << 3
+    PATH_DREADLORD_DEFENDER_1 = 5565600,
+    PATH_DREADLORD_DEFENDER_2 = 5565601,
+    PATH_CORRUPTED_ARCANIST   = 5565400,
+    PATH_LEGION_DEMON         = 5550300
 };
 
 enum PerotharnTexts
@@ -50,7 +50,7 @@ enum PerotharnTexts
 // 55085 - Peroth'arn
 struct boss_peroth_arn : public BossAI
 {
-    boss_peroth_arn(Creature* creature) : BossAI(creature, DATA_PEROTHARN)
+    boss_peroth_arn(Creature* creature) : BossAI(creature, BOSS_PEROTHARN)
     {
         Initialize();
     }
@@ -59,7 +59,7 @@ struct boss_peroth_arn : public BossAI
     {
         // Peroth'arn is spawned twice, intro spawn can be targeted
         if (me->HasStringId("peroth_arn_woe_intro"))
-            me->SetUninteractible(true);
+            me->SetUninteractible(false);
     }
 
     void DoAction(int32 actionId) override
@@ -68,7 +68,7 @@ struct boss_peroth_arn : public BossAI
         {
             case ACTION_PEROTHARN_INTRO:
             {
-                if (!_intro)
+                if (!introDone)
                 {
                     Talk(SAY_INTRO_0);
                     scheduler.Schedule(5s + 659ms, [this](TaskContext context)
@@ -95,13 +95,13 @@ struct boss_peroth_arn : public BossAI
                             Talk(SAY_INTRO_2);
 
                             dreadlordDefender1->GetMotionMaster()->MovePath(PATH_DREADLORD_DEFENDER_1, false);
-                            dreadlordDefender1->DespawnOrUnsummon(20s);
+                            dreadlordDefender1->DespawnOrUnsummon(15s);
 
                             dreadlordDefender2->GetMotionMaster()->MovePath(PATH_DREADLORD_DEFENDER_2, false);
-                            dreadlordDefender2->DespawnOrUnsummon(20s);
+                            dreadlordDefender2->DespawnOrUnsummon(15s);
 
                             corruptedArcanist->GetMotionMaster()->MovePath(PATH_CORRUPTED_ARCANIST, false);
-                            corruptedArcanist->DespawnOrUnsummon(20s);
+                            corruptedArcanist->DespawnOrUnsummon(15s);
 
                             context.Schedule(3s + 449ms, [this](TaskContext context)
                             {
@@ -120,7 +120,7 @@ struct boss_peroth_arn : public BossAI
                             });
                         });
                     });
-                    _intro = true;
+                    introDone = true;
                     break;
                 }
             }
@@ -135,7 +135,7 @@ struct boss_peroth_arn : public BossAI
     }
 
 private:
-    bool _intro = false;
+    bool introDone = false;
 };
 
 void AddSC_boss_peroth_arn()

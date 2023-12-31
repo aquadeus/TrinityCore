@@ -21,18 +21,19 @@
 
 ObjectData const creatureData[] =
 {
-    { BOSS_PEROTHARN,     DATA_PEROTHARN     },
-    { BOSS_QUEEN_AZSHARA, DATA_QUEEN_AZSHARA },
-    { BOSS_MANNOROTH,     DATA_MANNOROTH     },
+    { NPC_PEROTHARN,      BOSS_PEROTHARN     },
+    { NPC_QUEEN_AZSHARA,  BOSS_QUEEN_AZSHARA },
+    { NPC_MANNOROTH,      BOSS_MANNOROTH     },
     { NPC_NOZDORMU,       DATA_NOZDORMU      },
+    { NPC_ILLIDAN_PART_1, DATA_ILLIDAN_1     },
     { 0,                  0                  }  // END
 };
 
 DungeonEncounterData const encounters[] =
 {
-    { DATA_PEROTHARN,       {{ 1272 }}  },
-    { DATA_QUEEN_AZSHARA,   {{ 1273 }}  },
-    { DATA_MANNOROTH,       {{ 1274 }}  }
+    { BOSS_PEROTHARN,       {{ 1272 }}  },
+    { BOSS_QUEEN_AZSHARA,   {{ 1273 }}  },
+    { BOSS_MANNOROTH,       {{ 1274 }}  }
 };
 
 class instance_well_of_eternity : public InstanceMapScript
@@ -48,7 +49,53 @@ public:
             SetBossNumber(EncounterCount);
             LoadObjectData(creatureData, nullptr);
             LoadDungeonEncounterData(encounters);
+
+            IllidanEscortState = NOT_STARTED;
+            IllidanIntroState = NOT_STARTED;
         }
+
+        void OnPlayerEnter(Player* /*player*/) override
+        {
+            if (GetData(DATA_ILLIDAN_START_ESCORT) == DONE)
+                DoCastSpellOnPlayers(SPELL_SHADOWCLOAK_PLAYER);
+        }
+
+        void SetData(uint32 type, uint32 data) override
+        {
+            switch (type)
+            {
+                case DATA_ILLIDAN_START_ESCORT:
+                {
+                    IllidanEscortState = data;
+                    break;
+                }
+                case DATA_ILLIDAN_START_INTRO:
+                {
+                    IllidanIntroState = data;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        uint32 GetData(uint32 type) const override
+        {
+            switch (type)
+            {
+                case DATA_ILLIDAN_START_ESCORT:
+                    return IllidanEscortState;
+                case DATA_ILLIDAN_START_INTRO:
+                    return IllidanIntroState;
+                default:
+                    break;
+            }
+
+            return 0;
+        }
+
+        uint8 IllidanEscortState;
+        uint8 IllidanIntroState;
     };
 
     InstanceScript* GetInstanceScript(InstanceMap* map) const override

@@ -28,31 +28,43 @@ constexpr uint32 const EncounterCount = 3;
 enum WOEDataTypes
 {
     // Encounters
-    DATA_PEROTHARN          = 0,
-    DATA_QUEEN_AZSHARA      = 1,
-    DATA_MANNOROTH          = 2,
+    BOSS_PEROTHARN          = 0,
+    BOSS_QUEEN_AZSHARA      = 1,
+    BOSS_MANNOROTH          = 2,
 
-    // Other Datas
-    DATA_NOZDORMU           = 3
+    // Additional Data
+    DATA_NOZDORMU,
+
+    // Illidan Data
+    DATA_ILLIDAN_1,
+    DATA_ILLIDAN_START_INTRO,
+    DATA_ILLIDAN_START_ESCORT
 };
 
 enum WOECreatureIds
 {
     // Bosses
-    BOSS_PEROTHARN          = 55085,
-    BOSS_QUEEN_AZSHARA      = 54853,
-    BOSS_MANNOROTH          = 54969,
+    NPC_PEROTHARN           = 55085,
+    NPC_QUEEN_AZSHARA       = 54853,
+    NPC_MANNOROTH           = 54969,
 
     // NPCs
     NPC_NOZDORMU            = 55624,
     NPC_VAROTHEN            = 55419,
-    NPC_FIRE_WALL_STALKER   = 56096
+    NPC_FIRE_WALL_STALKER   = 56096,
+    NPC_ILLIDAN_PART_1      = 55500
 };
 
 enum WOEGameObjectIds
 {
     GO_LARGE_FIRE_WALL_DOOR = 210234,
     GO_COURTYARD_DOOR       = 210084
+};
+
+enum WOESpells
+{
+    SPELL_SHADOWCLOAK_PLAYER  = 103004,
+    SPELL_SHADOW_WALK_VEHICLE = 102994 // ToDo: Fix mount vehicle when aura is removed and applied again / support player vehicles?
 };
 
 enum WOESharedActions
