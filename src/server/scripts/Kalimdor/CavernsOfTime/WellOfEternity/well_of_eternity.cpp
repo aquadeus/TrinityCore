@@ -663,7 +663,7 @@ class spell_woe_distract_demon_missile : public SpellScript
     void Register() override
     {
         OnObjectTargetSelect += SpellObjectTargetSelectFn(spell_woe_distract_demon_missile::SelectTarget, EFFECT_0, TARGET_DEST_NEARBY_ENTRY);
-        OnEffectHit += SpellEffectFn(spell_woe_distract_demon_missile::StartMoving, EFFECT_0, SPELL_EFFECT_ALL);
+        OnEffectHit += SpellEffectFn(spell_woe_distract_demon_missile::StartMoving, EFFECT_0, SPELL_EFFECT_ANY);
     }
 
 private:
@@ -673,7 +673,7 @@ private:
 // 104400 - Wall of Shadow
 class spell_woe_wall_of_shadow : public AuraScript
 {
-    void PeriodicTick(AuraEffect const* aurEff)
+    void PeriodicTick(AuraEffect const* /*aurEff*/)
     {
         // SPELL_ATTR1_TRACK_TARGET_IN_CHANNEL doesn't work with DEST targetsfSetOrientation
         GetCaster()->SetFacingToObject(GetTarget());
