@@ -73,7 +73,9 @@ enum Actions
     ACTION_TALK                 = 3,
     ACTION_SKIP_TALK            = 4,
     ACTION_MOVE_TO_DISTRACT     = 5,
-    ACTION_START_DISTRACTION    = 6
+    ACTION_START_DISTRACTION    = 6,
+    ACTION_CHECK_PLAYERS        = 7,
+    ACTION_FINISH_DISTRACTION   = 8
 };
 
 enum Spells
@@ -127,28 +129,22 @@ enum Gossip
 
 enum Tasks
 {
-    TASK_WAITING = 1
+    TASK_WAITING       = 0,
+    TASK_CHECK_PLAYERS = 1
 };
 
-Position const wallOfShadowStalkerPos  = { 3312.3826f, -4906.39f, 181.07674f };
+Position const distractionEndPoint[2] =
+{
+    { 3313.2888f, -4932.8378f },
+    { 3290.6479f, -4945.4965f }
+};
 
-static Position const illidanSummonPos[4] =
+Position const illidanSummonPos[4] =
 {
     { 3173.6746f, -4875.5103f, 194.43994f, 5.3581609f },
     { 3294.2f,    -4981.97f,   181.16032f, 0.8726646f },
     { 3444.98f,   -4886.34f,   181.16032f, 4.0142574f },
     { 3471.1199f, -4839.83f,   194.21544f, 2.0071287f }
-};
-
-static Position const firewallPos[7] =
-{
-    { 3204.6145f, -4935.3647f, 194.41118f },
-    { 3182.0986f, -4933.1196f, 194.41118f },
-    { 3201.0647f, -4937.5664f, 194.41118f },
-    { 3185.1438f, -4935.9785f, 194.41118f },
-    { 3197.0664f, -4938.774f,  194.41118f },
-    { 3188.825f,  -4937.952f,  194.41118f },
-    { 3192.8916f, -4938.9053f, 194.41118f }
 };
 
 // Areatrigger - 7387
@@ -310,6 +306,17 @@ class spell_woe_summon_fel_firewall_cosmetic_ph : public AuraScript
 
     void HandlePeriodic(AuraEffect const* aurEff)
     {
+        Position const firewallPos[7] =
+        {
+            { 3204.6145f, -4935.3647f, 194.41118f },
+            { 3182.0986f, -4933.1196f, 194.41118f },
+            { 3201.0647f, -4937.5664f, 194.41118f },
+            { 3185.1438f, -4935.9785f, 194.41118f },
+            { 3197.0664f, -4938.774f,  194.41118f },
+            { 3188.825f,  -4937.952f,  194.41118f },
+            { 3192.8916f, -4938.9053f, 194.41118f }
+        };
+
         switch (aurEff->GetTickNumber())
         {
             case 1:
@@ -425,11 +432,11 @@ struct npc_woe_illidan_part_1 : public VehicleAI
                 scheduler.Schedule(1s + 116ms, [this](TaskContext context)
                 {
                     me->GetMotionMaster()->MovePath(PATH_ILLIDAN_INTRO, false);
-                    context.Schedule(804ms, [this](TaskContext /*context*/)
+                    context.Schedule(804ms, [this](TaskContext context)
                     {
                         Talk(SAY_GREETING_1);
 
-                        scheduler.Schedule(45s, 60s, TASK_WAITING, [this](TaskContext task)
+                        context.Schedule(45s, 60s, TASK_WAITING, [this](TaskContext task)
                         {
                             Talk(SAY_GREETING_IDLE_1);
                             task.Repeat();
@@ -470,10 +477,46 @@ struct npc_woe_illidan_part_1 : public VehicleAI
             }
             case ACTION_START_DISTRACTION:
             {
-                scheduler.Schedule(4s + 200ms, [this](TaskContext /*context*/)
+                scheduler.Schedule(4s + 200ms, [this](TaskContext context)
                 {
                     DoCast(SPELL_WALL_OF_SHADOW);
+                    context.Schedule(4s, [this](TaskContext /*context*/)
+                    {
+                        DoAction(ACTION_CHECK_PLAYERS);
+                    });
                 });
+                break;
+            }
+            case ACTION_CHECK_PLAYERS:
+            {
+                scheduler.Schedule(500ms, 1s, [this](TaskContext task)
+                {
+                    // Hacky, but works like retail, and i didn't find any areatriggers, auras or npcs related to this event
+                    // We need all players to move through the wall of shadow before Illidan starts moving again
+                    Map::PlayerList const& players = _instance->instance->GetPlayers();
+                    bool playerMisplaced = false;
+                    for (auto const& i : players)
+                    {
+                        if (Player* player = i.GetSource())
+                        {
+                            if (player->GetDistance2d(distractionEndPoint[0].GetPositionX(), distractionEndPoint[0].GetPositionY()) >= 15.0f && player->GetDistance2d(distractionEndPoint[1].GetPositionX(), distractionEndPoint[1].GetPositionY()) >= 15.0f)
+                            {
+                                playerMisplaced = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!playerMisplaced)
+                        DoAction(ACTION_FINISH_DISTRACTION);
+                    else
+                        task.Repeat();
+                });
+                break;
+            }
+            case ACTION_FINISH_DISTRACTION:
+            {
+                Talk(SAY_DISTRACT_END_1);
                 break;
             }
             default:
@@ -668,6 +711,7 @@ class spell_woe_distract_demon_missile : public SpellScript
 
 private:
     ObjectGuid _wallOfShadowGUID;
+    Position const wallOfShadowStalkerPos  = { 3312.3826f, -4906.39f, 181.07674f };
 };
 
 // 104400 - Wall of Shadow
