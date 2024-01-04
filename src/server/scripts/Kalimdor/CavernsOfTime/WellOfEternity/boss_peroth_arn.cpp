@@ -50,17 +50,7 @@ enum PerotharnTexts
 // 55085 - Peroth'arn
 struct boss_peroth_arn : public BossAI
 {
-    boss_peroth_arn(Creature* creature) : BossAI(creature, BOSS_PEROTHARN)
-    {
-        Initialize();
-    }
-
-    void Initialize()
-    {
-        // Peroth'arn is spawned twice, intro spawn can be targeted
-        if (me->HasStringId("peroth_arn_woe_intro"))
-            me->SetUninteractible(false);
-    }
+    boss_peroth_arn(Creature* creature) : BossAI(creature, BOSS_PEROTHARN) { }
 
     void DoAction(int32 actionId) override
     {
@@ -68,7 +58,7 @@ struct boss_peroth_arn : public BossAI
         {
             case ACTION_PEROTHARN_INTRO:
             {
-                if (!introDone)
+                if (instance->GetData(DATA_PEROTHARN_INTRO) != DONE)
                 {
                     Talk(SAY_INTRO_0);
                     scheduler.Schedule(5s + 659ms, [this](TaskContext context)
@@ -120,7 +110,7 @@ struct boss_peroth_arn : public BossAI
                             });
                         });
                     });
-                    introDone = true;
+                    instance->SetData(DATA_PEROTHARN_INTRO, DONE);
                     break;
                 }
             }
@@ -133,9 +123,6 @@ struct boss_peroth_arn : public BossAI
     {
         scheduler.Update(diff);
     }
-
-private:
-    bool introDone = false;
 };
 
 void AddSC_boss_peroth_arn()

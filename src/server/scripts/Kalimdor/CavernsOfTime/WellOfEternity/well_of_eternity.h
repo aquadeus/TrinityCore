@@ -34,11 +34,13 @@ enum WOEDataTypes
 
     // Additional Data
     DATA_NOZDORMU,
+    DATA_PEROTHARN_INTRO,
 
     // Illidan Data
     DATA_ILLIDAN_1,
     DATA_ILLIDAN_START_INTRO,
-    DATA_ILLIDAN_START_ESCORT
+    DATA_ILLIDAN_START_ESCORT,
+    DATA_ILLIDAN_FIRST_PORTAL
 };
 
 enum WOECreatureIds
@@ -52,13 +54,19 @@ enum WOECreatureIds
     NPC_NOZDORMU            = 55624,
     NPC_VAROTHEN            = 55419,
     NPC_FIRE_WALL_STALKER   = 56096,
-    NPC_ILLIDAN_PART_1      = 55500
+    NPC_ILLIDAN_PART_1      = 55500,
+    NPC_DEMON_STALKER       = 58200
 };
 
 enum WOEGameObjectIds
 {
     GO_LARGE_FIRE_WALL_DOOR = 210234,
     GO_COURTYARD_DOOR       = 210084
+};
+
+enum WOESpawnGroups
+{
+    SPAWN_GROUP_PEROTHARN_INTRO = 327
 };
 
 enum WOESpells
@@ -69,7 +77,8 @@ enum WOESpells
 
 enum WOESharedActions
 {
-    ACTION_PEROTHARN_INTRO = 1
+    ACTION_PEROTHARN_INTRO         = 1,
+    ACTION_ILLIDAN_ON_FIRST_PORTAL = 10
 };
 
 template <class AI, class T>

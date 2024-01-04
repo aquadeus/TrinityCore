@@ -24,6 +24,8 @@ ObjectData const creatureData[] =
     { NPC_PEROTHARN,      BOSS_PEROTHARN     },
     { NPC_QUEEN_AZSHARA,  BOSS_QUEEN_AZSHARA },
     { NPC_MANNOROTH,      BOSS_MANNOROTH     },
+
+    // Additional Datas
     { NPC_NOZDORMU,       DATA_NOZDORMU      },
     { NPC_ILLIDAN_PART_1, DATA_ILLIDAN_1     },
     { 0,                  0                  }  // END
@@ -50,20 +52,32 @@ public:
             LoadObjectData(creatureData, nullptr);
             LoadDungeonEncounterData(encounters);
 
+            PerotharnIntroState = NOT_STARTED;
             IllidanEscortState = NOT_STARTED;
             IllidanIntroState = NOT_STARTED;
+            IllidanFirstPortalState = NOT_STARTED;
+            _portalOneCreaturesAlive = 0;
+            //_portalTwoCreaturesAlive = 0;
+            //_portalThreeCreaturesAlive = 0;
         }
 
         void OnPlayerEnter(Player* /*player*/) override
         {
             if (GetData(DATA_ILLIDAN_START_ESCORT) == DONE)
                 DoCastSpellOnPlayers(SPELL_SHADOWCLOAK_PLAYER);
+            else if (GetData(DATA_PEROTHARN_INTRO) != DONE)
+                instance->SpawnGroupSpawn(SPAWN_GROUP_PEROTHARN_INTRO);
         }
 
         void SetData(uint32 type, uint32 data) override
         {
             switch (type)
             {
+                case DATA_PEROTHARN_INTRO:
+                {
+                    PerotharnIntroState = data;
+                    break;
+                }
                 case DATA_ILLIDAN_START_ESCORT:
                 {
                     IllidanEscortState = data;
@@ -72,6 +86,11 @@ public:
                 case DATA_ILLIDAN_START_INTRO:
                 {
                     IllidanIntroState = data;
+                    break;
+                }
+                case DATA_ILLIDAN_FIRST_PORTAL:
+                {
+                    IllidanFirstPortalState = data;
                     break;
                 }
                 default:
@@ -87,6 +106,10 @@ public:
                     return IllidanEscortState;
                 case DATA_ILLIDAN_START_INTRO:
                     return IllidanIntroState;
+                case DATA_ILLIDAN_FIRST_PORTAL:
+                    return IllidanFirstPortalState;
+                case DATA_PEROTHARN_INTRO:
+                    return PerotharnIntroState;
                 default:
                     break;
             }
@@ -94,8 +117,40 @@ public:
             return 0;
         }
 
+        void OnCreatureCreate(Creature* creature) override
+        {
+            InstanceScript::OnCreatureCreate(creature);
+
+            if (creature->HasStringId("portal_1_creature"))
+                _portalOneCreaturesAlive++;
+        }
+
+        void OnUnitDeath(Unit* unit) override
+        {
+            Creature* creature = unit->ToCreature();
+            if (!creature)
+                return;
+
+            if (creature->HasStringId("portal_1_creature"))
+            {
+                --_portalOneCreaturesAlive;
+                if (_portalOneCreaturesAlive > 0)
+                    return;
+
+                Creature* illidan = GetCreature(DATA_ILLIDAN_1);
+                if (!illidan)
+                    return;
+
+                illidan->AI()->DoAction(ACTION_ILLIDAN_ON_FIRST_PORTAL);
+            }
+        }
+
+    private:
+        uint8 PerotharnIntroState;
         uint8 IllidanEscortState;
         uint8 IllidanIntroState;
+        uint8 IllidanFirstPortalState;
+        uint8 _portalOneCreaturesAlive;
     };
 
     InstanceScript* GetInstanceScript(InstanceMap* map) const override

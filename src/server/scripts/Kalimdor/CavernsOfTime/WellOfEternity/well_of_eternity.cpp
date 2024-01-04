@@ -75,7 +75,8 @@ enum Actions
     ACTION_MOVE_TO_DISTRACT     = 5,
     ACTION_START_DISTRACTION    = 6,
     ACTION_CHECK_PLAYERS        = 7,
-    ACTION_FINISH_DISTRACTION   = 8
+    ACTION_FINISH_DISTRACTION   = 8,
+    ACTION_ENTER_COMBAT         = 9
 };
 
 enum Spells
@@ -95,6 +96,9 @@ enum Spells
     SPELL_SHADOW_AMBUSHER                    = 103018,
     SPELL_WALL_OF_SHADOW                     = 104400,
 
+    // Fel Crystal / Portal Npcs
+    SPELL_ARCANE_EXPLOSION                   = 98122,
+
     // Misc
     SPELL_DISTRACT_DEMONS_STATIONARY         = 110082,
     SPELL_SHRINK                             = 59632   // Serverside
@@ -102,13 +106,21 @@ enum Spells
 
 enum MovementMisc
 {
-    // Illidan Stormrage
-    PATH_ILLIDAN_INTRO  = 5550000,
-    WAYPOINT_GOSSIP     = 4,
+    // Legion Demon
+    WAYPOINT_INTRO             = 3,
 
-    PATH_ILLIDAN_ESCORT = 5550001,
-    WAYPOINT_TALK       = 2,
-    WAYPOINT_DISTRACT   = 9,
+    // Illidan Stormrage
+    PATH_ILLIDAN_INTRO         = 5550000,
+    WAYPOINT_GOSSIP            = 4,
+
+    PATH_ILLIDAN_ESCORT        = 5550001,
+    WAYPOINT_TALK              = 2,
+    WAYPOINT_DISTRACT          = 9,
+
+    PATH_ILLIDAN_PORTAL_1      = 5550002,
+    WAYPOINT_ATTACK            = 9,
+
+    POINT_DESPAWN_FIRST_PORTAL = 0,
 
     // Well of Eternity Stalker
     POINT_START_MOVING  = 0
@@ -124,13 +136,18 @@ enum Gossip
 {
     MENU_ID_ILLIDAN_1     = 13162,
     MENU_ID_ILLIDAN_2     = 13163,
-    GOSSIP_OPTION_ID      = 0
+    MENU_ID_ILLIDAN_WALL  = 13395
 };
 
 enum Tasks
 {
     TASK_WAITING       = 0,
     TASK_CHECK_PLAYERS = 1
+};
+
+enum Factions
+{
+    FACTION_WELL_OF_ETERNITY_ILLIDAN = 2385
 };
 
 Position const distractionEndPoint[2] =
@@ -231,16 +248,7 @@ private:
 // 55503 - Legion Demon
 struct npc_woe_legion_demon : public ScriptedAI
 {
-    npc_woe_legion_demon(Creature* creature) : ScriptedAI(creature)
-    {
-        Initialize();
-    }
-
-    void Initialize()
-    {
-        if (me->HasStringId("legion_demon_woe_intro"))
-            me->SetImmuneToPC(true);
-    }
+    npc_woe_legion_demon(Creature* creature) : ScriptedAI(creature) { }
 
     void JustEngagedWith(Unit* /*who*/) override
     {
@@ -252,7 +260,7 @@ struct npc_woe_legion_demon : public ScriptedAI
         if (!me->HasStringId("legion_demon_woe_intro"))
             return;
 
-        if (waypointId == 3)
+        if (waypointId == WAYPOINT_INTRO)
         {
             if (Creature* stalker = me->FindNearestCreature(NPC_FIRE_WALL_STALKER, 25.0f))
                 stalker->CastSpell(stalker, SPELL_SUMMON_FEL_FIREWALL_COSMETIC, TRIGGERED_FULL_MASK);
@@ -417,18 +425,45 @@ public:
     }
 };
 
-// 55500 - Illidan Stormrage (Part 1)
-struct npc_woe_illidan_part_1 : public VehicleAI
+// 55500 - Illidan Stormrage (Courtyard of Lights)
+struct npc_woe_illidan_courtyard_of_lights : public ScriptedAI
 {
-    npc_woe_illidan_part_1(Creature* creature) : VehicleAI(creature), _instance(creature->GetInstanceScript()) { }
+    npc_woe_illidan_courtyard_of_lights(Creature* creature) : ScriptedAI(creature), _instance(creature->GetInstanceScript()) { }
+
+    void JustEngagedWith(Unit* /*who*/) override
+    {
+        Talk(SAY_COMBAT_2);
+        me->RemoveAurasDueToSpell(SPELL_SHADOWCLOAK_VEHICLE);
+    }
+
+    void MovementInform(uint32 type, uint32 id) override
+    {
+        if (type != POINT_MOTION_TYPE)
+            return;
+
+        if (id == POINT_DESPAWN_FIRST_PORTAL)
+        {
+            _instance->SetData(DATA_ILLIDAN_FIRST_PORTAL, DONE);
+            me->DespawnOrUnsummon();
+            me->SummonCreature(NPC_ILLIDAN_PART_1, illidanSummonPos[1], TEMPSUMMON_MANUAL_DESPAWN);
+
+            //if (Creature* illidan = instance->GetCreature(DATA_ILLIDAN_1))
+              //  illidan->AI()->DoAction(ACTION_ILLIDAN_INTRO);
+        }
+    }
+
+    void EnterEvadeMode(EvadeReason /*why*/) override
+    {
+        DoCast(SPELL_SHADOWCLOAK_VEHICLE);
+    }
 
     void DoAction(int32 actionId) override
     {
         switch (actionId)
         {
+            /* ---------------- PART 1 --------------*/
             case ACTION_ILLIDAN_INTRO:
             {
-                me->SetVisible(true);
                 scheduler.Schedule(1s + 116ms, [this](TaskContext context)
                 {
                     me->GetMotionMaster()->MovePath(PATH_ILLIDAN_INTRO, false);
@@ -516,9 +551,40 @@ struct npc_woe_illidan_part_1 : public VehicleAI
             }
             case ACTION_FINISH_DISTRACTION:
             {
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 Talk(SAY_DISTRACT_END_1);
+                scheduler.Schedule(3s, [this](TaskContext context)
+                {
+                    me->GetMotionMaster()->MovePath(PATH_ILLIDAN_PORTAL_1, false);
+
+                    context.Schedule(3s + 622ms, [this](TaskContext /*context*/)
+                    {
+                        std::list<Creature*> demonStalkers;
+                        GetCreatureListWithEntryInGrid(demonStalkers, me, NPC_DEMON_STALKER, 100.0f);
+
+                        for (Creature* demonStalkerGroup : demonStalkers)
+                            demonStalkerGroup->DespawnOrUnsummon();
+                    });
+                });
+
                 break;
             }
+            case ACTION_ENTER_COMBAT:
+            {
+                if (me->GetFaction() != FACTION_WELL_OF_ETERNITY_ILLIDAN)
+                {
+                    me->SetFaction(FACTION_WELL_OF_ETERNITY_ILLIDAN);
+                    SetCombatMovement(true);
+                }
+                break;
+            }
+            case ACTION_ILLIDAN_ON_FIRST_PORTAL:
+            {
+                me->GetMotionMaster()->MovePoint(POINT_DESPAWN_FIRST_PORTAL, illidanSummonPos[1]);
+                break;
+            }
+            /* ------------ END OF PART 1 -----------*/
+            /* ---------------- PART 2 --------------*/
             default:
                 break;
         }
@@ -540,37 +606,46 @@ struct npc_woe_illidan_part_1 : public VehicleAI
             {
                 Talk(SAY_DISTRACT_1);
                 DoAction(ACTION_START_DISTRACTION);
-                // me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP); Another gossip
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             }
+        }
+        else if (pathId == PATH_ILLIDAN_PORTAL_1)
+        {
+            if (waypointId == WAYPOINT_ATTACK)
+                Talk(SAY_IDLE_1);
         }
     }
 
     bool OnGossipHello(Player* player) override
     {
-        InitGossipMenuFor(player, MENU_ID_ILLIDAN_1);
-        AddGossipItemFor(player, MENU_ID_ILLIDAN_1, GOSSIP_OPTION_ID, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        SendGossipMenuFor(player, player->GetGossipTextId(MENU_ID_ILLIDAN_1, me), me->GetGUID());
+        if (_instance->GetData(DATA_ILLIDAN_START_ESCORT) == DONE)
+        {
+            player->PrepareGossipMenu(me, MENU_ID_ILLIDAN_WALL, true);
+            player->SendPreparedGossip(me);
+            return true;
+        }
+
+        player->PrepareGossipMenu(me, MENU_ID_ILLIDAN_1, true);
+        player->SendPreparedGossip(me);
 
         return true;
     }
 
-    bool OnGossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId) override
+    bool OnGossipSelect(Player* player, uint32 menuId, uint32 /*gossipListId*/) override
     {
-        uint32 const action = player->PlayerTalkClass->GetGossipOptionAction(gossipListId);
         ClearGossipMenuFor(player);
-        switch (action)
+        switch (menuId)
         {
-            case GOSSIP_ACTION_INFO_DEF + 1:
+            case MENU_ID_ILLIDAN_1:
             {
-                InitGossipMenuFor(player, MENU_ID_ILLIDAN_2);
-                AddGossipItemFor(player, MENU_ID_ILLIDAN_2, GOSSIP_OPTION_ID, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
-                SendGossipMenuFor(player, player->GetGossipTextId(MENU_ID_ILLIDAN_2, me), me->GetGUID());
+                player->PrepareGossipMenu(me, MENU_ID_ILLIDAN_2, true);
+                player->SendPreparedGossip(me);
 
                 Talk(SAY_CLOAK_1);
                 _instance->DoCastSpellOnPlayers(SPELL_SHADOWCLOAK_PLAYER);
                 break;
             }
-            case GOSSIP_ACTION_INFO_DEF + 2:
+            case MENU_ID_ILLIDAN_2:
             {
                 me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                 DoAction(ACTION_TALK);
@@ -583,6 +658,11 @@ struct npc_woe_illidan_part_1 : public VehicleAI
     void UpdateAI(uint32 diff) override
     {
         scheduler.Update(diff);
+
+        if (!UpdateVictim())
+            return;
+
+        DoMeleeAttackIfReady();
     }
 
 private:
@@ -645,10 +725,10 @@ class spell_woe_shadowcloak_aura : public AuraScript
 {
     bool Validate(SpellInfo const* /*spellInfo*/) override
     {
-        return ValidateSpellInfo({ SPELL_SHADOW_WALK_VEHICLE, SPELL_SHADOW_WALK });
+        return ValidateSpellInfo({ SPELL_SHADOW_WALK_VEHICLE, SPELL_SHADOW_WALK, SPELL_SHADOW_AMBUSHER });
     }
 
-    void HandleProc(AuraEffect* /*aurEff*/, ProcEventInfo& eventInfo)
+    void HandleProc(AuraEffect* /*aurEff*/, ProcEventInfo& /*eventInfo*/)
     {
         /*int32 duration = 0;
         if (Aura* aura = eventInfo.GetActor()->GetAura(SPELL_SHADOW_WALK))
@@ -659,13 +739,26 @@ class spell_woe_shadowcloak_aura : public AuraScript
         args.AddSpellMod(SPELLVALUE_DURATION, GetDuration() * duration);
         eventInfo.GetActor()->CastSpell(eventInfo.GetActor(), SPELL_SHADOW_AMBUSHER, args);*/
 
-        eventInfo.GetActor()->RemoveAurasDueToSpell(SPELL_SHADOW_WALK_VEHICLE);
-        eventInfo.GetActor()->RemoveAurasDueToSpell(SPELL_SHADOW_WALK);
+        if (Creature* illidan = GetTarget()->GetInstanceScript()->GetCreature(DATA_ILLIDAN_1))
+            if (npc_woe_illidan_courtyard_of_lights* illidanAI = CAST_AI(npc_woe_illidan_courtyard_of_lights, illidan->GetAI()))
+                illidanAI->DoAction(ACTION_ENTER_COMBAT);
+    }
+
+    void HandleStealth(bool isNowInCombat)
+    {
+        if (isNowInCombat)
+        {
+            GetTarget()->RemoveAurasDueToSpell(SPELL_SHADOW_WALK_VEHICLE);
+            GetTarget()->RemoveAurasDueToSpell(SPELL_SHADOW_WALK);
+        }
+        else
+            GetTarget()->CastSpell(GetTarget(), SPELL_SHADOW_WALK_VEHICLE, TRIGGERED_FULL_MASK);
     }
 
     void Register() override
     {
         OnEffectProc += AuraEffectProcFn(spell_woe_shadowcloak_aura::HandleProc, EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+        OnEnterLeaveCombat += AuraEnterLeaveCombatFn(spell_woe_shadowcloak_aura::HandleStealth);
     }
 };
 
@@ -734,9 +827,7 @@ struct npc_well_of_eternity_stalker : public ScriptedAI
 {
     npc_well_of_eternity_stalker(Creature* creature) : ScriptedAI(creature) { }
 
-    void UpdateAI(uint32 /*diff*/) override
-    {
-    }
+    void UpdateAI(uint32 /*diff*/) override { }
 };
 
 void AddSC_well_of_eternity()
@@ -752,11 +843,10 @@ void AddSC_well_of_eternity()
     // First boss stuff
     new at_woe_illidan_intro();
     new at_woe_illidan_skip_talk();
-    RegisterWellOfEternityCreatureAI(npc_woe_illidan_part_1);
+    RegisterWellOfEternityCreatureAI(npc_woe_illidan_courtyard_of_lights);
     RegisterWellOfEternityCreatureAI(npc_woe_distract_demon_stalker);
     RegisterSpellAndAuraScriptPair(spell_woe_shadowcloak, spell_woe_shadowcloak_aura);
     RegisterSpellScript(spell_woe_shadowcloak_dismount);
     RegisterSpellScript(spell_woe_distract_demon_missile);
     RegisterSpellScript(spell_woe_wall_of_shadow);
-    //RegisterWellOfEternityCreatureAI(npc_well_of_eternity_stalker);
 }

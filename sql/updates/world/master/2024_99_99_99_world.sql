@@ -15,38 +15,43 @@ INSERT INTO `creature_addon` (`guid`, `path_id`, `mount`, `StandState`, `AnimTie
 (@CGUID+0, 0, 0, 0, 3, 1, 1, 0, 0, 0, 0, 0, 0, '49414'); -- Alurmi - 49414 - Generic Quest Invisibility 1
 
 UPDATE `creature_template` SET `ScriptName` = 'npc_woe_nozdormu' WHERE `entry` = 55624;
+UPDATE `creature_template` SET `unit_flags`=0, `unit_flags2`=4196352 WHERE `entry`=55656; -- Dreadlord Defender
 UPDATE `creature_template` SET `BaseAttackTime`=2001980, `unit_flags`=2181071616, `unit_flags2`=4194304, `unit_flags3`=1, `ScriptName`='boss_peroth_arn' WHERE `entry`=55085; -- Peroth'arn
 UPDATE `creature_template` SET `unit_flags`=64, `unit_flags2`=4196352, `ScriptName`='npc_woe_legion_demon' WHERE `entry`=55503; -- Legion Demon
 UPDATE `creature_template_addon` SET `VisFlags`=1 WHERE `entry`=57864; -- 57864 (Alurmi) - Generic Quest Invisibility 1
 UPDATE `creature_template` SET `unit_flags3`=1 WHERE `entry`=56389; -- Shadowcloak Illidan Helper Stalker PH
 UPDATE `creature_template` SET `unit_flags3`=1 WHERE `entry`=55154; -- Shadowcloak Helper Stalker PH
-UPDATE `creature_template` SET `unit_flags`=32768, `unit_flags2`=2099200, `ScriptName`='npc_woe_illidan_part_1' WHERE `entry`=55500; -- Illidan Stormrage
+UPDATE `creature_template` SET `unit_flags`=32768, `unit_flags2`=2099200, `ScriptName`='npc_woe_illidan_courtyard_of_lights' WHERE `entry`=55500; -- Illidan Stormrage
 UPDATE `creature_template` SET `speed_walk`=1.399999976158142089, `speed_run`=0.5, `unit_flags`=33555200, `unit_flags2`=2099200, `unit_flags3`=524289, `ScriptName` = 'npc_woe_distract_demon_stalker' WHERE `entry`=58200; -- Distract Demon Stalker
 UPDATE `creature_template` SET `unit_flags2`=4196352, `unit_flags3`=1 WHERE `entry`=54506; -- Well of Eternity Stalker
+UPDATE `creature_template` SET `unit_flags`=0, `unit_flags2`=4196352 WHERE `entry`=55654; -- Corrupted Arcanist
+UPDATE `creature_template` SET `unit_flags2`=4196352, `unit_flags3`=1 WHERE `entry`=54500; -- Legion Demon
 
-DELETE FROM `creature_template_gossip` WHERE (`CreatureID`=55624 AND `MenuID`=13412) OR (`CreatureID`=55500 AND `MenuID` IN (13359,13162));
+DELETE FROM `creature_template_gossip` WHERE (`CreatureID`=55624 AND `MenuID`=13412) OR (`CreatureID`=55500 AND `MenuID` IN (13359,13162, 13395));
 INSERT INTO `creature_template_gossip` (`CreatureID`, `MenuID`, `VerifiedBuild`) VALUES
 (55624, 13412, 52485), -- Nozdormu
 (55500, 13359, 52485), -- Illidan Stormrage
-(55500, 13162, 52485); -- Illidan Stormrage
+(55500, 13162, 52485), -- Illidan Stormrage
+(55500, 13395, 52649); -- Illidan Stormrage
 
-DELETE FROM `gossip_menu` WHERE (`MenuID`=13412 AND `TextID`=18851) OR (`MenuID`=13163 AND `TextID`=18551) OR (`MenuID`=13162 AND `TextID`=18550);
+DELETE FROM `gossip_menu` WHERE (`MenuID`=13412 AND `TextID`=18851) OR (`MenuID`=13163 AND `TextID`=18551) OR (`MenuID`=13162 AND `TextID`=18550) OR (`MenuID`=13359 AND `TextID`=18551) OR (`MenuID`=13395 AND `TextID`=19024);
 INSERT INTO `gossip_menu` (`MenuID`, `TextID`, `VerifiedBuild`) VALUES
 (13412, 18851, 52485), -- 55624 (Nozdormu)
 (13163, 18551, 52485), -- 55500 (Illidan Stormrage)
-(13162, 18550, 52485); -- 55500 (Illidan Stormrage)
+(13162, 18550, 52485), -- 55500 (Illidan Stormrage)
+(13359, 18551, 52485), -- 55500 (Illidan Stormrage)
+(13395, 19024, 52649); -- 55500 (Illidan Stormrage)
 
-DELETE FROM `npc_text` WHERE `ID` = 18551;
+DELETE FROM `npc_text` WHERE `ID` IN (18550, 18551, 19024);
 INSERT INTO `npc_text` (`ID`, `Probability0`, `Probability1`, `Probability2`, `Probability3`, `Probability4`, `Probability5`, `Probability6`, `Probability7`, `BroadcastTextId0`, `BroadcastTextId1`, `BroadcastTextId2`, `BroadcastTextId3`, `BroadcastTextId4`, `BroadcastTextId5`, `BroadcastTextId6`, `BroadcastTextId7`, `VerifiedBuild`) VALUES
-(18551, 1, 0, 0, 0, 0, 0, 0, 0, 54226, 0, 0, 0, 0, 0, 0, 0, 52485); -- 55500 (Illidan Stormrage)
+(18551, 1, 0, 0, 0, 0, 0, 0, 0, 54226, 0, 0, 0, 0, 0, 0, 0, 52485), -- 55500 (Illidan Stormrage)
+(18550, 1, 0, 0, 0, 0, 0, 0, 0, 54224, 0, 0, 0, 0, 0, 0, 0, 52485),
+(19024, 1, 0, 0, 0, 0, 0, 0, 0, 56957, 0, 0, 0, 0, 0, 0, 0, 52485); -- 55500 (Illidan Stormrage)
 
-DELETE FROM `gossip_menu` WHERE (`MenuID`=13359 AND `TextID`=18551);
-INSERT INTO `gossip_menu` (`MenuID`, `TextID`, `VerifiedBuild`) VALUES
-(13359, 18551, 52485); -- 55500 (Illidan Stormrage)
-
-DELETE FROM `gossip_menu_option` WHERE `MenuID`=13162 AND `OptionID`=0;
+DELETE FROM `gossip_menu_option` WHERE `MenuID`IN (13162, 13163) AND `OptionID`=0;
 INSERT INTO `gossip_menu_option` (`MenuID`, `GossipOptionID`, `OptionID`, `OptionNpc`, `OptionText`, `OptionBroadcastTextID`, `Language`, `Flags`, `ActionMenuID`, `ActionPoiID`, `GossipNpcOptionID`, `BoxCoded`, `BoxMoney`, `BoxText`, `BoxBroadcastTextID`, `SpellID`, `OverrideIconID`, `VerifiedBuild`) VALUES
-(13162, 39551, 0, 0, 'I am ready to be hidden by your shadowcloak.', 54246, 0, 0, 0, 0, NULL, 0, 0, NULL, 0, NULL, NULL, 0);
+(13162, 39551, 0, 0, 'I am ready to be hidden by your shadowcloak.', 54246, 0, 0, 13163, 0, NULL, 0, 0, NULL, 0, NULL, NULL, 52649),
+(13163, 39656, 0, 0, 'Let\'s go!', 54247, 0, 0, 0, 0, NULL, 0, 0, NULL, 0, NULL, NULL, 52649);
 
 DELETE FROM `creature_template_difficulty` WHERE (`DifficultyID`=2 AND `Entry` = 57864);
 INSERT INTO `creature_template_difficulty` (`Entry`, `DifficultyID`, `HealthScalingExpansion`, `HealthModifier`, `ManaModifier`, `CreatureDifficultyID`, `TypeFlags`, `TypeFlags2`) VALUES
@@ -65,11 +70,11 @@ DELETE FROM `creature_template_movement` WHERE `CreatureId`=56389;
 INSERT INTO `creature_template_movement` (`CreatureId`, `Ground`, `Swim`, `Flight`, `Rooted`, `Chase`, `Random`, `InteractionPauseTimer`) VALUES
 (56389, NULL, NULL, 1, 1, NULL, NULL, NULL);
 
-UPDATE `creature` SET `StringId` = 'legion_demon_woe_intro' WHERE `guid` = 358739;
-UPDATE `creature` SET `StringId` = 'dreadlord_defender_woe_intro_1' WHERE `guid` = 358724;
-UPDATE `creature` SET `StringId` = 'dreadlord_defender_woe_intro_2' WHERE `guid` = 358728;
-UPDATE `creature` SET `StringId` = 'corrupted_arcanist_woe_intro' WHERE `guid` = 358730;
-UPDATE `creature` SET `StringId` = 'peroth_arn_woe_intro' WHERE `guid` = 358741;
+UPDATE `creature` SET `unit_flags` = 768, `StringId` = 'legion_demon_woe_intro' WHERE `guid` = 358739;
+UPDATE `creature` SET `unit_flags` = 768, `StringId` = 'dreadlord_defender_woe_intro_1' WHERE `guid` = 358724;
+UPDATE `creature` SET `unit_flags` = 768, `StringId` = 'dreadlord_defender_woe_intro_2' WHERE `guid` = 358728;
+UPDATE `creature` SET `unit_flags` = 768, `StringId` = 'corrupted_arcanist_woe_intro' WHERE `guid` = 358730;
+UPDATE `creature` SET `unit_flags` = 768, `unit_flags` = 768, `StringId` = 'peroth_arn_woe_intro' WHERE `guid` = 358741;
 UPDATE `creature` SET `StringId` = 'wall_of_shadow_stalker' WHERE `guid` = 358752;
 
 -- Double spawn
@@ -99,13 +104,13 @@ INSERT INTO `creature_text` (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Lan
 (55500, 6, 0, 'I will hold them back so we can get past. Be ready.', 12, 0, 100, 0, 0, 26063, 54297, 2, 'Illidan Stormrage to Player'),
 (55500, 7, 0, 'My magic is fading. I\'m going through!', 12, 0, 100, 0, 0, 26064, 54299, 2, 'Illidan Stormrage to Illidan Stormrage'),
 (55500, 8, 0, 'Attack. I don\'t like to be kept waiting.', 12, 0, 100, 0, 0, 26081, 54304, 2, 'Illidan Stormrage to Illidan Stormrage'),
-(55500, 9, 0, 'My blades hunger.', 12, 0, 100, 0, 0, 26057, 54503, 2, 'Illidan Stormrage to Arcanista corrupto'),
+(55500, 9, 0, 'My blades hunger.', 12, 0, 100, 0, 0, 26057, 54503, 2, 'Illidan Stormrage to Corrupted Arcanist'),
+(55500, 9, 1, 'Death to the Legion!', 12, 0, 100, 0, 0, 26056, 54444, 2, 'Illidan Stormrage to Dreadlord Defender'),
 (55500, 10, 0, 'Destroy the crystal so we can move on.', 12, 0, 100, 0, 0, 26103, 54468, 2, 'Illidan Stormrage to Dreadlord Defender'),
 (55500, 11, 0, 'We\'re leaving. Stay close.', 12, 0, 100, 0, 0, 26055, 54511, 2, 'Illidan Stormrage to Player'),
 (55500, 12, 0, 'They come endlessly from the palace.', 12, 0, 50, 0, 0, 26069, 54510, 2, 'Illidan Stormrage to Player'),
 (55500, 12, 1, 'They will get what they deserve, in due time.', 12, 0, 50, 0, 0, 26067, 54292, 2, 'Illidan Stormrage to Player'),
 (55500, 13, 0, 'I\'ll let you have the first kill.  Don\'t make me regret that.', 12, 0, 100, 0, 0, 26082, 54308, 2, 'Illidan Stormrage to Player'),
-(55500, 14, 0, 'Death to the Legion!', 12, 0, 100, 0, 0, 26056, 54444, 2, 'Illidan Stormrage to Dreadlord Defender'),
 (55500, 15, 0, 'Smash the crystal. We need to move.', 12, 0, 100, 0, 0, 26104, 54709, 2, 'Illidan Stormrage to Dreadlord Defender'),
 (55500, 16, 0, 'The stench of sulfur and brimstone... These portals are as foul as the demons themselves.', 12, 0, 100, 0, 0, 26070, 54512, 2, 'Illidan Stormrage to Player'),
 (55500, 17, 0, 'Cut this one down from the shadows.', 12, 0, 100, 0, 0, 26071, 54514, 2, 'Illidan Stormrage to Player'),
@@ -127,6 +132,19 @@ INSERT INTO `vehicle_template_accessory` (`entry`, `accessory_entry`, `seat_id`,
 DELETE FROM `npc_spellclick_spells` WHERE `npc_entry`=55500 AND `spell_id`=46598;
 INSERT INTO `npc_spellclick_spells` (`npc_entry`, `spell_id`, `cast_flags`, `user_type`) VALUES
 (55500, 46598, 0, 0);
+
+-- Groups
+DELETE FROM `spawn_group_template` WHERE `groupId`=327;
+INSERT INTO `spawn_group_template` (`groupId`, `groupName`, `groupFlags`) VALUES
+(327, 'Well of Eternity - Intro spawns', 4);
+
+DELETE FROM `spawn_group` WHERE `groupId`=327 AND `spawnType`=0 AND `spawnId`IN (358741, 358724, 358730, 358739, 358728);
+INSERT INTO `spawn_group` (`groupId`, `spawnType`, `spawnId`) VALUES
+(327, 0, 358741),
+(327, 0, 358724),
+(327, 0, 358730),
+(327, 0, 358739),
+(327, 0, 358728);
 
 -- Areatriggers
 DELETE FROM `areatrigger_scripts` WHERE `entry`IN (7387, 7029, 7066, 7144);
@@ -260,3 +278,19 @@ INSERT INTO `waypoint_data` (`id`, `point`, `position_x`, `position_y`, `positio
 (@PATH_ILLIDAN_ESCORT, 7, 3291.629, -4898.922, 181.3266, NULL, 0, 1),
 (@PATH_ILLIDAN_ESCORT, 8, 3293.629, -4899.672, 181.3266, NULL, 0, 1),
 (@PATH_ILLIDAN_ESCORT, 9, 3294.941, -4901.915, 181.0767, NULL, 0, 1);
+
+SET @ENTRY := 55500;
+SET @PATHOFFSET := 2;
+SET @PATH_ILLIDAN_PORTAL_1 := @ENTRY * 100 + @PATHOFFSET;
+DELETE FROM `waypoint_data` WHERE `id`= @PATH_ILLIDAN_PORTAL_1;
+INSERT INTO `waypoint_data` (`id`, `point`, `position_x`, `position_y`, `position_z`, `orientation`, `delay`, `move_type`) VALUES
+(@PATH_ILLIDAN_PORTAL_1, 0, 3299.646, -4905.302, 181.3267, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 1, 3303.896, -4914.052, 181.3267, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 2, 3308.850, -4924.189, 181.0767, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 3, 3309.388, -4929.150, 181.32675, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 4, 3309.138, -4936.400, 181.32675, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 5, 3306.638, -4944.650, 181.32675, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 6, 3303.388, -4953.150, 181.32675, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 7, 3300.138, -4961.900, 181.32675, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 8, 3297.138, -4970.900, 181.32675, NULL, 0, 1),
+(@PATH_ILLIDAN_PORTAL_1, 9, 3295.040, -4976.809, 181.07677, NULL, 0, 1);
