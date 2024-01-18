@@ -282,7 +282,10 @@ public:
     {
         // Remove aura if player drops quest
         if (newStatus == QUEST_STATUS_NONE)
+        {
+            player->CastSpell(player, SPELL_UPDATE_PHASE_SHIFT);
             player->CastSpell(player, SPELL_COMBAT_TRAINING_COMPLETE);
+        }
     }
 };
 
@@ -2909,7 +2912,7 @@ struct npc_sparring_partner_enhanced_combat_training_priest : public npc_sparrin
         {
             case EVENT_COMBAT_TRAINING_SPELL_FADING:
             {
-                Aura* aura = me->GetAura(SPELL_MOONFIRE);
+                Aura* aura = me->GetAura(SPELL_SHADOW_WORD_PAIN);
                 if (!aura)
                     break;
 
@@ -3176,7 +3179,7 @@ struct npc_sparring_partner_enhanced_combat_training_warlock : public npc_sparri
         {
             case EVENT_COMBAT_TRAINING_SPELL_FADING:
             {
-                Aura* aura = me->GetAura(SPELL_MOONFIRE);
+                Aura* aura = me->GetAura(SPELL_CORRUPTION);
                 if (!aura)
                     break;
 
