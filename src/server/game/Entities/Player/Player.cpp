@@ -1986,7 +1986,10 @@ Creature* Player::GetNPCIfCanInteractWith(ObjectGuid const& guid, NPCFlags npcFl
         return nullptr;
 
     // not unfriendly/hostile
-    if (!creature->HasUnitFlag2(UNIT_FLAG2_INTERACT_WHILE_HOSTILE) && creature->GetReactionTo(this) <= REP_UNFRIENDLY)
+    if (!creature->IsInteractionAllowedWhileHostile() && creature->GetReactionTo(this) <= REP_UNFRIENDLY)
+        return nullptr;
+
+    if (creature->IsInCombat() && !creature->IsInteractionAllowedInCombat())
         return nullptr;
 
     // not too far, taken from CGGameUI::SetInteractTarget
@@ -2032,37 +2035,6 @@ GameObject* Player::GetGameObjectIfCanInteractWith(ObjectGuid const& guid, Gameo
         return nullptr;
 
     return go;
-}
-
-void Player::UpdateNearbyCreatureNpcFlags()
-{
-    std::vector<Creature*> creatures;
-    GetCreatureListWithOptionsInGrid(creatures, GetVisibilityRange(), { .IgnorePhases = false });
-
-    UpdateData udata(GetMapId());
-    UF::ObjectData::Base objMask;
-    UF::UnitData::Base unitMask;
-    for (uint32 i = 0; i < m_unitData->NpcFlags.size(); ++i)
-        unitMask.MarkChanged(&UF::UnitData::NpcFlags, i);
-
-    for (Creature* creature : creatures)
-    {
-        if (!HaveAtClient(creature))
-            continue;
-
-        // skip creatures which dont have any npcflags set
-        if (!creature->GetNpcFlags() && !creature->GetNpcFlags2())
-            continue;
-
-        creature->BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), unitMask.GetChangesMask(), this);
-    }
-
-    if (!udata.HasData())
-        return;
-
-    WorldPacket packet;
-    udata.BuildPacket(&packet);
-    SendDirectMessage(&packet);
 }
 
 bool Player::IsInAreaTriggerRadius(AreaTriggerEntry const* trigger) const
@@ -15027,8 +14999,6 @@ void Player::AddQuest(Quest const* quest, Object* questGiver)
 
     sScriptMgr->OnQuestStatusChange(this, quest_id);
     sScriptMgr->OnQuestStatusChange(this, quest, oldStatus, questStatusData.Status);
-
-    UpdateNearbyCreatureNpcFlags();
 }
 
 void Player::CompleteQuest(uint32 quest_id)
@@ -15408,15 +15378,11 @@ void Player::RewardQuest(Quest const* quest, LootItemType rewardType, uint32 rew
         UpdatePvPState();
     }
 
-    SendQuestGiverStatusMultiple();
-
-    SendQuestUpdate(quest_id);
+    SendQuestUpdate(quest_id, true, true);
 
     bool updateVisibility = false;
     if (quest->HasFlag(QUEST_FLAGS_UPDATE_PHASESHIFT))
         updateVisibility = PhasingHandler::OnConditionChange(this, false);
-
-    UpdateNearbyCreatureNpcFlags();
 
     //lets remove flag for delayed teleports
     SetCanDelayTeleport(false);
@@ -15449,8 +15415,6 @@ void Player::RewardQuest(Quest const* quest, LootItemType rewardType, uint32 rew
 
     if (updateVisibility)
         UpdateObjectVisibility();
-
-    UpdateNearbyCreatureNpcFlags();
 }
 
 void Player::SetRewardedQuest(uint32 quest_id)
@@ -16105,8 +16069,6 @@ void Player::SetQuestStatus(uint32 questId, QuestStatus status, bool update /*= 
         sScriptMgr->OnQuestStatusChange(this, quest, oldStatus, status);
     }
 
-    UpdateNearbyCreatureNpcFlags();
-
     if (update)
         SendQuestUpdate(questId);
 }
@@ -16160,7 +16122,7 @@ void Player::RemoveRewardedQuest(uint32 questId, bool update /*= true*/)
         SendQuestUpdate(questId);
 }
 
-void Player::SendQuestUpdate(uint32 questId)
+void Player::SendQuestUpdate(uint32 questId, bool updateInteractions /*= true*/, bool updateGameObjectQuestGiverStatus /*= false*/)
 {
     SpellAreaForQuestMapBounds saBounds = sSpellMgr->GetSpellAreaForQuestMapBounds(questId);
 
@@ -16208,7 +16170,8 @@ void Player::SendQuestUpdate(uint32 questId)
             RemoveAurasDueToSpell(spellId);
     }
 
-    UpdateVisibleGameobjectsOrSpellClicks();
+    if (updateInteractions)
+        UpdateVisibleObjectInteractions(true, false, updateGameObjectQuestGiverStatus, true);
 }
 
 QuestGiverStatus Player::GetQuestDialogStatus(Object const* questgiver) const
@@ -16228,6 +16191,13 @@ QuestGiverStatus Player::GetQuestDialogStatus(Object const* questgiver) const
         }
         case TYPEID_UNIT:
         {
+            Creature const* questGiverCreature = questgiver->ToCreature();
+            if (!questGiverCreature->IsInteractionAllowedWhileHostile() && questGiverCreature->IsHostileTo(this))
+                return QuestGiverStatus::None;
+
+            if (!questGiverCreature->IsInteractionAllowedInCombat() && questGiverCreature->IsInCombat())
+                return QuestGiverStatus::None;
+
             if (CreatureAI* ai = questgiver->ToCreature()->AI())
                 if (Optional<QuestGiverStatus> questStatus = ai->GetDialogStatus(this))
                     return *questStatus;
@@ -16355,7 +16325,7 @@ void Player::SkipQuests(std::vector<uint32> const& questIds)
         }
 
         SetRewardedQuest(questId);
-        SendQuestUpdate(questId);
+        SendQuestUpdate(questId, false);
 
         if (!updateVisibility && quest->HasFlag(QUEST_FLAGS_UPDATE_PHASESHIFT))
             updateVisibility = PhasingHandler::OnConditionChange(this, false);
@@ -16364,15 +16334,13 @@ void Player::SkipQuests(std::vector<uint32> const& questIds)
         sScriptMgr->OnQuestStatusChange(this, quest, oldStatus, QUEST_STATUS_REWARDED);
     }
 
-    SendQuestGiverStatusMultiple();
+    UpdateVisibleObjectInteractions(true, false, true, true);
 
     // make full db save
     SaveToDB(false);
 
     if (updateVisibility)
         UpdateObjectVisibility();
-
-    UpdateNearbyCreatureNpcFlags();
 }
 
 void Player::DespawnPersonalSummonsForQuest(uint32 questId)
@@ -16677,7 +16645,7 @@ void Player::ItemRemovedQuestCheck(uint32 entry, uint32 /*count*/)
             IncompleteQuest(questId);
         }
     }
-    UpdateVisibleGameobjectsOrSpellClicks();
+    UpdateVisibleObjectInteractions(true, false, false, true);
 }
 
 void Player::KilledMonster(CreatureTemplate const* cInfo, ObjectGuid guid)
@@ -16900,12 +16868,10 @@ void Player::UpdateQuestObjectiveProgress(QuestObjectiveType objectiveType, int3
     }
 
     if (anyObjectiveChangedCompletionState)
-        UpdateVisibleGameobjectsOrSpellClicks();
+        UpdateVisibleObjectInteractions(true, false, false, true);
 
     if (updatePhaseShift)
         PhasingHandler::OnConditionChange(this);
-
-    UpdateNearbyCreatureNpcFlags();
 
     if (updateZoneAuras)
     {
@@ -17385,7 +17351,7 @@ void Player::SendQuestGiverStatusMultiple(GuidUnorderedSet const& guids)
         {
             // need also pet quests case support
             Creature* questgiver = ObjectAccessor::GetCreatureOrPetOrVehicle(*this, *itr);
-            if (!questgiver || questgiver->IsHostileTo(this))
+            if (!questgiver)
                 continue;
             if (!questgiver->HasNpcFlag(UNIT_NPC_FLAG_QUESTGIVER))
                 continue;
@@ -25155,33 +25121,37 @@ bool Player::HasQuestForGO(int32 GOId) const
     return false;
 }
 
-void Player::UpdateVisibleGameobjectsOrSpellClicks()
+void Player::UpdateVisibleObjectInteractions(bool allUnits, bool onlySpellClicks, bool gameObjectQuestGiverStatus, bool questObjectiveGameObjects)
 {
-    if (m_clientGUIDs.empty())
-        return;
-
+    WorldPackets::Quest::QuestGiverStatusMultiple giverStatusMultiple;
     UpdateData udata(GetMapId());
-    WorldPacket packet;
-    for (auto itr = m_clientGUIDs.begin(); itr != m_clientGUIDs.end(); ++itr)
+    for (ObjectGuid visibleObjectGuid : m_clientGUIDs)
     {
-        if (itr->IsGameObject())
+        if (visibleObjectGuid.IsGameObject() && (gameObjectQuestGiverStatus || questObjectiveGameObjects))
         {
-            if (GameObject* obj = ObjectAccessor::GetGameObject(*this, *itr))
+            GameObject* gameObject = ObjectAccessor::GetGameObject(*this, visibleObjectGuid);
+            if (!gameObject)
+                continue;
+
+            if (gameObjectQuestGiverStatus && gameObject->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER)
+                giverStatusMultiple.QuestGiver.emplace_back(visibleObjectGuid, GetQuestDialogStatus(gameObject));
+
+            if (questObjectiveGameObjects)
             {
                 UF::ObjectData::Base objMask;
                 UF::GameObjectData::Base goMask;
 
-                if (m_questObjectiveStatus.find({ QUEST_OBJECTIVE_GAMEOBJECT, int32(obj->GetEntry()) }) != m_questObjectiveStatus.end())
+                if (m_questObjectiveStatus.contains({ QUEST_OBJECTIVE_GAMEOBJECT, int32(gameObject->GetEntry()) }))
                     objMask.MarkChanged(&UF::ObjectData::DynamicFlags);
 
-                switch (obj->GetGoType())
+                switch (gameObject->GetGoType())
                 {
                     case GAMEOBJECT_TYPE_QUESTGIVER:
                     case GAMEOBJECT_TYPE_CHEST:
                     case GAMEOBJECT_TYPE_GOOBER:
                     case GAMEOBJECT_TYPE_GENERIC:
                     case GAMEOBJECT_TYPE_GATHERING_NODE:
-                        if (sObjectMgr->IsGameObjectForQuests(obj->GetEntry()))
+                        if (sObjectMgr->IsGameObjectForQuests(gameObject->GetEntry()))
                             objMask.MarkChanged(&UF::ObjectData::DynamicFlags);
                         break;
                     default:
@@ -25189,35 +25159,62 @@ void Player::UpdateVisibleGameobjectsOrSpellClicks()
                 }
 
                 if (objMask.GetChangesMask().IsAnySet() || goMask.GetChangesMask().IsAnySet())
-                    obj->BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), goMask.GetChangesMask(), this);
+                    gameObject->BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), goMask.GetChangesMask(), this);
             }
         }
-        else if (itr->IsCreatureOrVehicle())
+        else if (visibleObjectGuid.IsCreatureOrVehicle() && (allUnits || onlySpellClicks))
         {
-            Creature* obj = ObjectAccessor::GetCreatureOrPetOrVehicle(*this, *itr);
-            if (!obj)
+            Creature* creature = ObjectAccessor::GetCreatureOrPetOrVehicle(*this, visibleObjectGuid);
+            if (!creature)
                 continue;
 
-            // check if this unit requires quest specific flags
-            if (!obj->HasNpcFlag(UNIT_NPC_FLAG_SPELLCLICK))
-                continue;
-
-            auto clickBounds = sObjectMgr->GetSpellClickInfoMapBounds(obj->GetEntry());
-            for (auto const& clickPair : clickBounds)
+            if (allUnits)
             {
-                if (sConditionMgr->HasConditionsForSpellClickEvent(obj->GetEntry(), clickPair.second.spellId))
+                UF::ObjectData::Base objMask;
+                UF::UnitData::Base unitMask;
+                for (uint32 i = 0; i < creature->m_unitData->NpcFlags.size(); ++i)
+                    if (creature->m_unitData->NpcFlags[i])
+                        unitMask.MarkChanged(&UF::UnitData::NpcFlags, i);
+
+                if (objMask.GetChangesMask().IsAnySet() || unitMask.GetChangesMask().IsAnySet())
+                    creature->BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), unitMask.GetChangesMask(), this);
+
+                if (creature->IsQuestGiver())
+                    giverStatusMultiple.QuestGiver.emplace_back(visibleObjectGuid, GetQuestDialogStatus(creature));
+            }
+            else if (onlySpellClicks)
+            {
+                // check if this unit requires quest specific flags
+                if (!creature->HasNpcFlag(UNIT_NPC_FLAG_SPELLCLICK))
+                    continue;
+
+                auto clickBounds = sObjectMgr->GetSpellClickInfoMapBounds(creature->GetEntry());
+                for (auto const& clickPair : clickBounds)
                 {
-                    UF::ObjectData::Base objMask;
-                    UF::UnitData::Base unitMask;
-                    unitMask.MarkChanged(&UF::UnitData::NpcFlags, 0); // NpcFlags[0] has UNIT_NPC_FLAG_SPELLCLICK
-                    obj->BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), unitMask.GetChangesMask(), this);
-                    break;
+                    if (sConditionMgr->HasConditionsForSpellClickEvent(creature->GetEntry(), clickPair.second.spellId))
+                    {
+                        UF::ObjectData::Base objMask;
+                        UF::UnitData::Base unitMask;
+                        unitMask.MarkChanged(&UF::UnitData::NpcFlags, 0); // NpcFlags[0] has UNIT_NPC_FLAG_SPELLCLICK
+                        creature->BuildValuesUpdateForPlayerWithMask(&udata, objMask.GetChangesMask(), unitMask.GetChangesMask(), this);
+                        break;
+                    }
                 }
             }
         }
     }
-    udata.BuildPacket(&packet);
-    SendDirectMessage(&packet);
+
+    // If as a result of npcflag updates we stop seeing UNIT_NPC_FLAG_QUESTGIVER then
+    // we must also send SMSG_QUEST_GIVER_STATUS_MULTIPLE because client will not request it automatically
+    if (!giverStatusMultiple.QuestGiver.empty())
+        SendDirectMessage(giverStatusMultiple.Write());
+
+    if (udata.HasData())
+    {
+        WorldPacket packet;
+        udata.BuildPacket(&packet);
+        SendDirectMessage(&packet);
+    }
 }
 
 bool Player::HasSummonPending() const

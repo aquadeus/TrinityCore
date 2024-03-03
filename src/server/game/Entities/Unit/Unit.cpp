@@ -3443,7 +3443,7 @@ void Unit::_ApplyAura(AuraApplication* aurApp, uint32 effMask)
     if (Player* player = ToPlayer())
     {
         if (sConditionMgr->IsSpellUsedInSpellClickConditions(aurApp->GetBase()->GetId()))
-            player->UpdateVisibleGameobjectsOrSpellClicks();
+            player->UpdateVisibleObjectInteractions(false, true, false, false);
 
         player->FailCriteria(CriteriaFailEvent::GainAura, aurApp->GetBase()->GetId());
         player->StartCriteria(CriteriaStartEvent::GainAura, aurApp->GetBase()->GetId());
@@ -3538,7 +3538,7 @@ void Unit::_UnapplyAura(AuraApplicationMap::iterator& i, AuraRemoveMode removeMo
     if (Player* player = ToPlayer())
     {
         if (sConditionMgr->IsSpellUsedInSpellClickConditions(aurApp->GetBase()->GetId()))
-            player->UpdateVisibleGameobjectsOrSpellClicks();
+            player->UpdateVisibleObjectInteractions(false, true, false, false);
 
         player->FailCriteria(CriteriaFailEvent::LoseAura, aurApp->GetBase()->GetId());
     }
@@ -8648,6 +8648,9 @@ void Unit::AtEnterCombat()
 
     RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::EnteringCombat);
     Unit::ProcSkillsAndAuras(this, nullptr, PROC_FLAG_ENTER_COMBAT, PROC_FLAG_NONE, PROC_SPELL_TYPE_MASK_ALL, PROC_SPELL_PHASE_NONE, PROC_HIT_NONE, nullptr, nullptr, nullptr);
+
+    if (!IsInteractionAllowedInCombat())
+        UpdateNearbyPlayersInteractions();
 }
 
 void Unit::AtExitCombat()
@@ -8661,6 +8664,9 @@ void Unit::AtExitCombat()
     }
 
     RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags::LeavingCombat);
+
+    if (!IsInteractionAllowedInCombat())
+        UpdateNearbyPlayersInteractions();
 }
 
 void Unit::AtTargetAttacked(Unit* target, bool canInitialAggro)
@@ -8697,6 +8703,34 @@ void Unit::UpdatePetCombatState()
         SetUnitFlag(UNIT_FLAG_PET_IN_COMBAT);
     else
         RemoveUnitFlag(UNIT_FLAG_PET_IN_COMBAT);
+}
+
+void Unit::SetInteractionAllowedWhileHostile(bool interactionAllowed)
+{
+    if (interactionAllowed)
+        SetUnitFlag2(UNIT_FLAG2_INTERACT_WHILE_HOSTILE);
+    else
+        RemoveUnitFlag2(UNIT_FLAG2_INTERACT_WHILE_HOSTILE);
+
+    UpdateNearbyPlayersInteractions();
+}
+
+void Unit::SetInteractionAllowedInCombat(bool interactionAllowed)
+{
+    if (interactionAllowed)
+        SetUnitFlag3(UNIT_FLAG3_ALLOW_INTERACTION_WHILE_IN_COMBAT);
+    else
+        RemoveUnitFlag3(UNIT_FLAG3_ALLOW_INTERACTION_WHILE_IN_COMBAT);
+
+    if (IsInCombat())
+        UpdateNearbyPlayersInteractions();
+}
+
+void Unit::UpdateNearbyPlayersInteractions()
+{
+    for (uint32 i = 0; i < m_unitData->NpcFlags.size(); ++i)
+        if (m_unitData->NpcFlags[i])
+            ForceUpdateFieldChange(m_values.ModifyValue(&Unit::m_unitData).ModifyValue(&UF::UnitData::NpcFlags, i));
 }
 
 //======================================================================
