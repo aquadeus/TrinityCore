@@ -400,10 +400,82 @@ private:
     TaskScheduler _scheduler;
 };
 
+// Quest 29414 - The Way of the Tushui
+enum AysaCloudSingerMisc
+{
+    // Texts
+    SAY_TEXT_0               = 0,
+
+
+    // Waypoints
+    POINT_JUMP               = 1,
+    PATH_CAVE_OF_MEDITATION  = 5965200
+};
+
+Position const aysaJumpPos[3] =
+{
+    { 1196.72f,   3492.85f,   90.9836f  },
+    { 1192.29f,   3478.69f,   108.788f  },
+    { 1197.99f,   3460.63f,   103.04f   }
+};
+
+// 59652 - Aysa Cloudsinger (summon)
+struct npc_aysa_cloudsinger_summon : public ScriptedAI
+{
+    npc_aysa_cloudsinger_summon(Creature* creature) : ScriptedAI(creature) { }
+
+    void IsSummonedBy(WorldObject* summoner) override
+    {
+        if (!summoner->IsPlayer())
+            return;
+
+        Talk(SAY_TEXT_0, summoner);
+
+        _scheduler.Schedule(Seconds(3), [this](TaskContext task)
+        {
+            me->GetMotionMaster()->MoveJumpWithGravity(aysaJumpPos[0], 12.0f, 17.4735f);
+
+            task.Schedule(Milliseconds(1700), [this](TaskContext task)
+            {
+                me->GetMotionMaster()->MoveJumpWithGravity(aysaJumpPos[1], 12.0f, 10.7163f);
+
+                task.Schedule(Seconds(2), [this](TaskContext task)
+                {
+                    me->GetMotionMaster()->MoveJumpWithGravity(aysaJumpPos[2], 12.0f, 14.6923f, POINT_JUMP);
+                });
+            });
+        });
+    }
+
+    void MovementInform(uint32 type, uint32 pointId) override
+    {
+        if (type != EFFECT_MOTION_TYPE)
+            return;
+
+        if (pointId == POINT_JUMP)
+            me->GetMotionMaster()->MovePath(PATH_CAVE_OF_MEDITATION, false);
+    }
+
+    void WaypointPathEnded(uint32 /*nodeId*/, uint32 pathId) override
+    {
+        if (pathId == PATH_CAVE_OF_MEDITATION)
+            me->DespawnOrUnsummon();
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _scheduler.Update(diff);
+    }
+
+private:
+    TaskScheduler _scheduler;
+};
+
 void AddSC_zone_the_wandering_isle()
 {
     RegisterCreatureAI(npc_tushui_huojin_trainee);
     RegisterCreatureAI(npc_huojin_trainee);
     RegisterCreatureAI(npc_tushui_leading_trainee);
     RegisterCreatureAI(npc_instructor_zhi);
+    RegisterCreatureAI(npc_aysa_cloudsinger_summon);
 }
