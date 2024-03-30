@@ -40,5 +40,4 @@ class TC_GAME_API DamageHistory
         StorageType _takenData;
 };
 
-
-#endif DamageHistory_h__
+#endif // DamageHistory_h__
