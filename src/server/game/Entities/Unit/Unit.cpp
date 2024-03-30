@@ -930,7 +930,12 @@ bool Unit::HasBreakableByDamageCrowdControlAura(Unit* excludeCasterChannel) cons
     }
 
     if (victim->GetTypeId() == TYPEID_PLAYER)
+    {
+        if (!(spellProto && spellProto->HasAttribute(SPELL_ATTR3_NO_DAMAGE_HISTORY)))
+            victim->ToPlayer()->GetDamageHistory().AddDamageTaken(damage);
+
         victim->ToPlayer()->UpdateCriteria(CriteriaType::HighestDamageTaken, damageTaken);
+    }
 
     if (victim->GetTypeId() != TYPEID_PLAYER && (!victim->IsControlledByPlayer() || victim->IsVehicle()))
     {

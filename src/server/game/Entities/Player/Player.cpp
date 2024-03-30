@@ -1166,6 +1166,9 @@ void Player::Update(uint32 p_time)
     //because we don't want player's ghost teleported from graveyard
     if (IsHasDelayedTeleport() && IsAlive())
         TeleportTo(m_teleport_dest, m_teleport_options);
+
+    if (now > (_damageHistory.GetLastCleanup() + DamageHistory::CleanupInterval))
+        _damageHistory.Cleanup(now);
 }
 
 void Player::setDeathState(DeathState s)

@@ -21,6 +21,7 @@
 #include "GridObject.h"
 #include "Unit.h"
 #include "CUFProfile.h"
+#include "DamageHistory.h"
 #include "DatabaseEnvFwd.h"
 #include "DBCEnums.h"
 #include "EquipmentSet.h"
@@ -2870,6 +2871,8 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
         void SendAreaSpiritHealerTime(Unit* spiritHealer) const;
         void SendAreaSpiritHealerTime(ObjectGuid const& spiritHealerGUID, int32 timeLeft) const;
 
+        DamageHistory& GetDamageHistory() { return _damageHistory; }
+
     protected:
         // Gamemaster whisper whitelist
         GuidList WhisperList;
@@ -3224,6 +3227,8 @@ class TC_GAME_API Player final : public Unit, public GridObject<Player>
 
         bool _usePvpItemLevels;
         ObjectGuid _areaSpiritHealerGUID;
+
+        DamageHistory _damageHistory;
 
         // Spell cast request handling
     public:
