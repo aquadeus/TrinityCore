@@ -40,6 +40,7 @@ enum class WaypointPathFlags : uint8
 {
     None                                = 0x00,
     FollowPathBackwardsFromEndToStart   = 0x01,
+    ExactSplinePath                     = 0x02, // Points are going to be merged into single packets and pathfinding is disabled
 };
 
 DEFINE_ENUM_FLAG(WaypointPathFlags);
@@ -79,10 +80,13 @@ struct WaypointPath
     }
 
     std::vector<WaypointNode> Nodes;
+    std::vector<std::pair<std::size_t, std::size_t>> ContinuousSegments;
     uint32 Id = 0;
     WaypointMoveType MoveType = WaypointMoveType::Walk;
     EnumFlag<WaypointPathFlags> Flags = WaypointPathFlags::None;
     Optional<float> Velocity;
+
+    void BuildSegments();
 };
 
 #endif
