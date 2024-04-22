@@ -17,11 +17,13 @@
 
 #include "AreaTrigger.h"
 #include "AreaTriggerAI.h"
+#include "CombatAI.h"
 #include "MotionMaster.h"
 #include "PassiveAI.h"
 #include "Player.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "SpellScript.h"
 #include "Vehicle.h"
 
 enum FrozenMountaineer
@@ -294,10 +296,52 @@ private:
     bool _isEventStarted;
 };
 
+// Quest 25839 - The Ultrasafe Personnel Launcher
+enum UltrasafeMisc
+{
+    // Spells
+    SPELL_EJECT_ALL_PASSENGERS     = 50630,
+    SPELL_PREPARE_FOR_LAUNCH       = 96003,
+    SPELL_FORCE_CAST_DEPLOY_A_TRON = 77431,
+
+    // Vehicle
+    SEAT_PLAYER = 0
+};
+
+// 41398 - Ultrasafe Personnel Launcher
+struct npc_ultrasafe_personnel_launcher : public VehicleAI
+{
+    npc_ultrasafe_personnel_launcher(Creature* creature) : VehicleAI(creature) { }
+
+    void PassengerBoarded(Unit* passenger, int8 /*seat*/, bool apply) override
+    {
+        if (apply)
+        {
+            _scheduler.Schedule(2s, [this](TaskContext task)
+            {
+                Unit* passenger = me->GetVehicleKit()->GetPassenger(SEAT_PLAYER);
+
+                DoCastSelf(SPELL_EJECT_ALL_PASSENGERS);
+                passenger->CastSpell(passenger, SPELL_PREPARE_FOR_LAUNCH, false);
+                passenger->CastSpell(passenger, SPELL_FORCE_CAST_DEPLOY_A_TRON, TRIGGERED_IGNORE_CASTER_AURAS);
+            });
+        }
+    }
+
+    void UpdateAI(uint32 diff) override
+    {
+        _scheduler.Update(diff);
+    }
+
+private:
+    TaskScheduler _scheduler;
+};
+
 void AddSC_dun_morogh()
 {
     // Creature
     new npc_frozen_mountaineer();
     RegisterCreatureAI(npc_sanitron_5000);
     RegisterCreatureAI(npc_safe_technician_sanitron);
+    RegisterCreatureAI(npc_ultrasafe_personnel_launcher);
 }
