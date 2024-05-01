@@ -31,10 +31,7 @@ enum RFCDataTypes
     BOSS_ADAROGG               = 0,
     BOSS_DARK_SHAMAN_KORANTHAL = 1,
     BOSS_SLAGMAW               = 2,
-    BOSS_LAVA_GUARD_GORDOTH    = 3,
-
-    // Additional Data
-    DATA_TEAM_IN_INSTANCE      = 4
+    BOSS_LAVA_GUARD_GORDOTH    = 3
 };
 
 enum RFCCreatureIds
