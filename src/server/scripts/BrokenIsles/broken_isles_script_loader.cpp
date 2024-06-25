@@ -25,6 +25,10 @@ void AddSC_instance_maw_of_souls();
 void AddSC_boss_guarm();
 void AddSC_instance_trial_of_valor();
 
+// The Emerald Nightmare
+void AddSC_boss_nythendra();
+void AddSC_instance_the_emerald_nightmare();
+
 // Orderhalls
 void AddSC_orderhall_warrior();
 void AddSC_zone_mardum();
@@ -40,6 +44,10 @@ void AddBrokenIslesScripts()
     // Trial of Valor
     AddSC_boss_guarm();
     AddSC_instance_trial_of_valor();
+
+    // The Emerald Nightmare
+    AddSC_boss_nythendra();
+    AddSC_instance_the_emerald_nightmare();
 
     AddSC_orderhall_warrior();
     AddSC_zone_mardum();

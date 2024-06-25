@@ -4856,6 +4856,17 @@ void SpellMgr::LoadSpellInfoCorrections()
 
     // ENDOF THE AZURE VAULT SPELLS
     //
+
+    // THE EMERALD NIGHTMARE SPELLS
+    //
+    // Transform Bugs
+    ApplySpellFix({ 220976 }, [](SpellInfo* spellInfo)
+    {
+        spellInfo->DurationEntry = sSpellDurationStore.LookupEntry(28); // 5 seconds
+    });
+    // END OF THE EMERALD NIGHTMARE SPELLS
+    //
+
     // Summon Master Li Fei
     ApplySpellFix({ 102445 }, [](SpellInfo* spellInfo)
     {
