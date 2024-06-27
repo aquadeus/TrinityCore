@@ -1454,7 +1454,7 @@ TC_API_EXPORT EnumText EnumUtils<SpellAttr9>::ToString(SpellAttr9 value)
         case SPELL_ATTR9_NEXT_MODAL_SPELL_REQUIRES_SAME_UNIT_TARGET: return { "SPELL_ATTR9_NEXT_MODAL_SPELL_REQUIRES_SAME_UNIT_TARGET", "Next modal spell requires same unit target", "Prevents automatically casting the spell from SpellClassOptions::ModalNextSpell after current spell if target was changed (client only)" };
         case SPELL_ATTR9_AUTOCAST_OFF_BY_DEFAULT: return { "SPELL_ATTR9_AUTOCAST_OFF_BY_DEFAULT", "AutoCast Off By Default", "" };
         case SPELL_ATTR9_IGNORE_SCHOOL_LOCKOUT: return { "SPELL_ATTR9_IGNORE_SCHOOL_LOCKOUT", "Ignore School Lockout", "" };
-        case SPELL_ATTR9_UNK19: return { "SPELL_ATTR9_UNK19", "Unknown attribute 19@Attr9", "" };
+        case SPELL_ATTR9_ALLOW_DARK_SIMULACRUM: return { "SPELL_ATTR9_ALLOW_DARK_SIMULACRUM", "Allow Dark Simulacrum", "" };
         case SPELL_ATTR9_UNK20: return { "SPELL_ATTR9_UNK20", "Unknown attribute 20@Attr9", "" };
         case SPELL_ATTR9_UNK21: return { "SPELL_ATTR9_UNK21", "Unknown attribute 21@Attr9", "" };
         case SPELL_ATTR9_UNK22: return { "SPELL_ATTR9_UNK22", "Unknown attribute 22@Attr9", "" };
@@ -1498,7 +1498,7 @@ TC_API_EXPORT SpellAttr9 EnumUtils<SpellAttr9>::FromIndex(size_t index)
         case 16: return SPELL_ATTR9_NEXT_MODAL_SPELL_REQUIRES_SAME_UNIT_TARGET;
         case 17: return SPELL_ATTR9_AUTOCAST_OFF_BY_DEFAULT;
         case 18: return SPELL_ATTR9_IGNORE_SCHOOL_LOCKOUT;
-        case 19: return SPELL_ATTR9_UNK19;
+        case 19: return SPELL_ATTR9_ALLOW_DARK_SIMULACRUM;
         case 20: return SPELL_ATTR9_UNK20;
         case 21: return SPELL_ATTR9_UNK21;
         case 22: return SPELL_ATTR9_UNK22;
@@ -1539,7 +1539,7 @@ TC_API_EXPORT size_t EnumUtils<SpellAttr9>::ToIndex(SpellAttr9 value)
         case SPELL_ATTR9_NEXT_MODAL_SPELL_REQUIRES_SAME_UNIT_TARGET: return 16;
         case SPELL_ATTR9_AUTOCAST_OFF_BY_DEFAULT: return 17;
         case SPELL_ATTR9_IGNORE_SCHOOL_LOCKOUT: return 18;
-        case SPELL_ATTR9_UNK19: return 19;
+        case SPELL_ATTR9_ALLOW_DARK_SIMULACRUM: return 19;
         case SPELL_ATTR9_UNK20: return 20;
         case SPELL_ATTR9_UNK21: return 21;
         case SPELL_ATTR9_UNK22: return 22;
@@ -1702,7 +1702,7 @@ TC_API_EXPORT EnumText EnumUtils<SpellAttr11>::ToString(SpellAttr11 value)
         case SPELL_ATTR11_UNK6: return { "SPELL_ATTR11_UNK6", "Unknown attribute 6@Attr11", "" };
         case SPELL_ATTR11_RANK_IGNORES_CASTER_LEVEL: return { "SPELL_ATTR11_RANK_IGNORES_CASTER_LEVEL", "Ignore Caster's spell level", "Spell_C_GetSpellRank returns SpellLevels->MaxLevel * 5 instead of std::min(SpellLevels->MaxLevel, caster->Level) * 5" };
         case SPELL_ATTR11_UNK8: return { "SPELL_ATTR11_UNK8", "Unknown attribute 8@Attr11", "" };
-        case SPELL_ATTR11_UNK9: return { "SPELL_ATTR11_UNK9", "Unknown attribute 9@Attr11", "" };
+        case SPELL_ATTR11_IGNORE_SPELLCAST_OVERRIDE_SHAPESHIFT_REQUIREMENTS: return { "SPELL_ATTR11_IGNORE_SPELLCAST_OVERRIDE_SHAPESHIFT_REQUIREMENTS", "Ignore Spellcast Override Shapeshift Requirements", "" };
         case SPELL_ATTR11_UNK10: return { "SPELL_ATTR11_UNK10", "Unknown attribute 10@Attr11", "" };
         case SPELL_ATTR11_NOT_USABLE_IN_INSTANCES: return { "SPELL_ATTR11_NOT_USABLE_IN_INSTANCES", "Not in Instances", "" };
         case SPELL_ATTR11_UNK12: return { "SPELL_ATTR11_UNK12", "Unknown attribute 12@Attr11", "" };
@@ -1746,7 +1746,7 @@ TC_API_EXPORT SpellAttr11 EnumUtils<SpellAttr11>::FromIndex(size_t index)
         case 6: return SPELL_ATTR11_UNK6;
         case 7: return SPELL_ATTR11_RANK_IGNORES_CASTER_LEVEL;
         case 8: return SPELL_ATTR11_UNK8;
-        case 9: return SPELL_ATTR11_UNK9;
+        case 9: return SPELL_ATTR11_IGNORE_SPELLCAST_OVERRIDE_SHAPESHIFT_REQUIREMENTS;
         case 10: return SPELL_ATTR11_UNK10;
         case 11: return SPELL_ATTR11_NOT_USABLE_IN_INSTANCES;
         case 12: return SPELL_ATTR11_UNK12;
@@ -1787,7 +1787,7 @@ TC_API_EXPORT size_t EnumUtils<SpellAttr11>::ToIndex(SpellAttr11 value)
         case SPELL_ATTR11_UNK6: return 6;
         case SPELL_ATTR11_RANK_IGNORES_CASTER_LEVEL: return 7;
         case SPELL_ATTR11_UNK8: return 8;
-        case SPELL_ATTR11_UNK9: return 9;
+        case SPELL_ATTR11_IGNORE_SPELLCAST_OVERRIDE_SHAPESHIFT_REQUIREMENTS: return 9;
         case SPELL_ATTR11_UNK10: return 10;
         case SPELL_ATTR11_NOT_USABLE_IN_INSTANCES: return 11;
         case SPELL_ATTR11_UNK12: return 12;

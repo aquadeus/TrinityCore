@@ -13772,6 +13772,9 @@ SpellInfo const* Unit::GetCastSpellInfo(SpellInfo const* spellInfo, TriggerCastF
                     if (auraEffect->GetSpellInfo()->HasAttribute(SPELL_ATTR8_IGNORE_SPELLCAST_OVERRIDE_COST))
                         triggerFlag |= TRIGGERED_IGNORE_POWER_AND_REAGENT_COST;
 
+                    if (auraEffect->GetSpellInfo()->HasAttribute(SPELL_ATTR11_IGNORE_SPELLCAST_OVERRIDE_SHAPESHIFT_REQUIREMENTS))
+                        triggerFlag |= TRIGGERED_IGNORE_SHAPESHIFT;
+
                     return newInfo;
                 }
             }
@@ -13784,7 +13787,10 @@ SpellInfo const* Unit::GetCastSpellInfo(SpellInfo const* spellInfo, TriggerCastF
         return newInfo;
 
     if (SpellInfo const* newInfo = findMatchingAuraEffectIn(SPELL_AURA_OVERRIDE_ACTIONBAR_SPELLS_TRIGGERED))
+    {
+        triggerFlag |= TRIGGERED_IGNORE_CAST_TIME;
         return newInfo;
+    }
 
     return spellInfo;
 }
