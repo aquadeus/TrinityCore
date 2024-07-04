@@ -27,10 +27,11 @@ static BossBoundaryData const boundaries =
 
 ObjectData const creatureData[] =
 {
-    { BOSS_SISTER_BRIAR,  DATA_SISTER_BRIAR  },
-    { BOSS_SISTER_MALADY, DATA_SISTER_MALADY },
-    { BOSS_SISTER_SOLENA, DATA_SISTER_SOLENA },
-    { 0,                  0                  }  // END
+    { BOSS_SISTER_BRIAR,        DATA_SISTER_BRIAR        },
+    { BOSS_SISTER_MALADY,       DATA_SISTER_MALADY       },
+    { BOSS_SISTER_SOLENA,       DATA_SISTER_SOLENA       },
+    { BOSS_RAAL_THE_GLUTTONOUS, DATA_RAAL_THE_GLUTTONOUS },
+    { 0,                        0                        }  // END
 };
 
 DoorData const doorData[] =

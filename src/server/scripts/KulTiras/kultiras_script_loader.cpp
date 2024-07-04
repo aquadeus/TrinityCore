@@ -21,6 +21,7 @@ void AddSC_zone_boralus();
 
 // Waycrest Manor
 void AddSC_boss_heartsbane_triad();
+void AddSC_boss_raal_the_gluttonous();
 void AddSC_instance_waycrest_manor();
 
 // The name of this function should match:
@@ -31,5 +32,6 @@ void AddKulTirasScripts()
 
     // Waycrest Manor
     AddSC_boss_heartsbane_triad();
+    AddSC_boss_raal_the_gluttonous();
     AddSC_instance_waycrest_manor();
 }
