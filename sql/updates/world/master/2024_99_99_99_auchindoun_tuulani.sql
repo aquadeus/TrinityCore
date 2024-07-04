@@ -1,3 +1,5 @@
+SET @CGUID := 100000000;
+
 UPDATE `creature` SET `StringId`='npc_auchenai_defender_intro' WHERE `guid`= 5000442; -- Auchenai Defender
 
 UPDATE `creature_template` SET `ScriptName` = 'npc_auchindoun_soulbinder_tuulani' WHERE `entry`=79248; -- Soulbinder Tuulani
@@ -99,8 +101,6 @@ INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry
 (26, 4346, 0, 0, 0, 56, 0, 31506, 0, 0, '', 0, 0, 0, '', 'Apply Phase 4346 if PlayerCondition 31506 is satisfied');
 
 -- Spawngroup
-SET @CGUID := 100000000;
-
 DELETE FROM `creature` WHERE `guid` = @CGUID;
 INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnDifficulties`, `PhaseId`, `PhaseGroup`, `modelid`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curHealthPct`, `MovementType`, `npcflag`, `unit_flags`, `unit_flags2`, `unit_flags3`, `VerifiedBuild`) VALUES
 (@CGUID, 79248, 1182, 6912, 6912, '1,2,8,23', 0, 0, 0, 1, 1859.0208740234375, 3197.3203125, 29.50753593444824218, 0.019564647227525711, 7200, 0, 0, 100, 0, NULL, NULL, NULL, NULL, 54904); -- Soulbinder Tuulani (Area: Auchindoun - Difficulty: Normal) CreateObject1 (Auras: 154840 - Void Stasis)
