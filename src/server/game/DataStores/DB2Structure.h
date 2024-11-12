@@ -122,6 +122,31 @@ struct AreaGroupMemberEntry
     uint32 AreaGroupID;
 };
 
+struct AreaPOIEntry
+{
+    LocalizedString Name;
+    LocalizedString Description;
+    uint32 ID;
+    std::array<float, 3> Pos;
+    int32 PortLocID;
+    uint32 PlayerConditionID;
+    uint32 UiTextureAtlasMemberID;
+    int32 Flags;
+    int32 WMOGroupID;
+    int32 PoiDataType;
+    int32 PoiData;
+    uint32 Unknown910_11;
+    uint16 ContinentID;
+    int16 AreaID;
+    uint16 WorldStateID;
+    int16 Unknown1000_12;
+    uint16 UiWidgetSetID;
+    uint16 UiTextureKitID;
+    uint16 Unknown910_17;
+    uint8 Importance;
+    uint8 Icon;
+};
+
 struct AreaTableEntry
 {
     uint32 ID;
@@ -3332,6 +3357,20 @@ struct QuestPackageItemEntry
     uint8 DisplayType;
 };
 
+struct QuestPOIBlobEntry
+{
+    uint32 ID;
+    uint16 MapID;
+    int32 UiMapID;
+    int32 Flags;
+    uint8 NumPoints;
+    uint32 QuestID;
+    int32 ObjectiveIndex;
+    int32 ObjectiveID;
+    uint32 PlayerConditionID;
+    uint32 NavigationPlayerConditionID;
+};
+
 struct QuestSortEntry
 {
     uint32 ID;
@@ -3345,6 +3384,35 @@ struct QuestV2Entry
     uint32 ID;
     uint16 UniqueBitFlag;
     int32 UiQuestDetailsTheme;
+};
+
+struct QuestV2CliTaskEntry
+{
+    uint32 ID;
+    int64 FiltRaces;
+    LocalizedString QuestTitle;
+    LocalizedString BulletText;
+    uint16 UniqueBitFlag;
+    uint32 ConditionID;
+    uint32 FiltActiveQuest;
+    int16 FiltClasses;
+    uint32 FiltCompletedQuestLogic;
+    uint32 FiltMaxFactionID;
+    uint32 FiltMaxFactionValue;
+    uint32 FiltMinFactionID;
+    uint32 FiltMinFactionValue;
+    uint32 FiltMinSkillID;
+    uint32 FiltMinSkillValue;
+    uint32 FiltNonActiveQuest;
+    uint32 BreadCrumbID;
+    int32 StartItem;
+    int32 WorldStateExpressionID;
+    uint32 QuestInfoID;
+    int32 ContentTuningID;
+    int32 CovenantID;
+    int32 Unknown902_22;
+    int32 Flags[3];
+    uint32 FiltCompletedQuest[3];
 };
 
 struct QuestXPEntry

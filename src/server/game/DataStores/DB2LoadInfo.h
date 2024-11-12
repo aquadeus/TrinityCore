@@ -160,6 +160,38 @@ struct AreaGroupMemberLoadInfo
     static constexpr DB2LoadInfo Instance{ Fields, 3, &AreaGroupMemberMeta::Instance, HOTFIX_SEL_AREA_GROUP_MEMBER };
 };
 
+struct AreaPoiLoadInfo
+{
+    static constexpr DB2FieldMeta Fields[23] =
+    {
+        { false, FT_STRING, "Name" },
+        { false, FT_STRING, "Description" },
+        { false, FT_INT, "ID" },
+        { false, FT_FLOAT, "Pos1" },
+        { false, FT_FLOAT, "Pos2" },
+        { false, FT_FLOAT, "Pos3" },
+        { true, FT_INT, "PortLocID" },
+        { false, FT_INT, "PlayerConditionID" },
+        { false, FT_INT, "UiTextureAtlasMemberID" },
+        { true, FT_INT, "Flags" },
+        { true, FT_INT, "WMOGroupID" },
+        { true, FT_INT, "PoiDataType" },
+        { true, FT_INT, "PoiData" },
+        { false, FT_INT, "Unknown910_11" },
+        { false, FT_SHORT, "ContinentID" },
+        { true, FT_SHORT, "AreaID" },
+        { false, FT_SHORT, "WorldStateID" },
+        { true, FT_SHORT, "Unknown1000_12" },
+        { false, FT_SHORT, "UiWidgetSetID" },
+        { false, FT_SHORT, "UiTextureKitID" },
+        { false, FT_SHORT, "Unknown910_17" },
+        { false, FT_BYTE, "Importance" },
+        { false, FT_BYTE, "Icon" },
+    };
+
+    static constexpr DB2LoadInfo Instance{ Fields, 23, &AreaPOIMeta::Instance, HOTFIX_SEL_AREA_POI };
+};
+
 struct AreaTableLoadInfo
 {
     static constexpr DB2FieldMeta Fields[28] =
@@ -4518,6 +4550,25 @@ struct QuestPackageItemLoadInfo
     static constexpr DB2LoadInfo Instance{ Fields, 5, &QuestPackageItemMeta::Instance, HOTFIX_SEL_QUEST_PACKAGE_ITEM };
 };
 
+struct QuestPoiBlobLoadInfo
+{
+    static constexpr DB2FieldMeta Fields[10] =
+    {
+        { false, FT_INT, "ID" },
+        { false, FT_SHORT, "MapID" },
+        { true, FT_INT, "UiMapID" },
+        { true, FT_INT, "Flags" },
+        { false, FT_BYTE, "NumPoints" },
+        { false, FT_INT, "QuestID" },
+        { true, FT_INT, "ObjectiveIndex" },
+        { true, FT_INT, "ObjectiveID" },
+        { false, FT_INT, "PlayerConditionID" },
+        { false, FT_INT, "NavigationPlayerConditionID" },
+    };
+
+    static constexpr DB2LoadInfo Instance{ Fields, 10, &QuestPOIBlobMeta::Instance, HOTFIX_SEL_QUEST_POI_BLOB };
+};
+
 struct QuestSortLoadInfo
 {
     static constexpr DB2FieldMeta Fields[4] =
@@ -4541,6 +4592,44 @@ struct QuestV2LoadInfo
     };
 
     static constexpr DB2LoadInfo Instance{ Fields, 3, &QuestV2Meta::Instance, HOTFIX_SEL_QUEST_V2 };
+};
+
+struct QuestV2CliTaskLoadInfo
+{
+    static constexpr DB2FieldMeta Fields[29] =
+    {
+        { false, FT_INT, "ID" },
+        { true, FT_LONG, "FiltRaces" },
+        { false, FT_STRING, "QuestTitle" },
+        { false, FT_STRING, "BulletText" },
+        { false, FT_SHORT, "UniqueBitFlag" },
+        { false, FT_INT, "ConditionID" },
+        { false, FT_INT, "FiltActiveQuest" },
+        { true, FT_SHORT, "FiltClasses" },
+        { false, FT_INT, "FiltCompletedQuestLogic" },
+        { false, FT_INT, "FiltMaxFactionID" },
+        { false, FT_INT, "FiltMaxFactionValue" },
+        { false, FT_INT, "FiltMinFactionID" },
+        { false, FT_INT, "FiltMinFactionValue" },
+        { false, FT_INT, "FiltMinSkillID" },
+        { false, FT_INT, "FiltMinSkillValue" },
+        { false, FT_INT, "FiltNonActiveQuest" },
+        { false, FT_INT, "BreadCrumbID" },
+        { true, FT_INT, "StartItem" },
+        { true, FT_INT, "WorldStateExpressionID" },
+        { false, FT_INT, "QuestInfoID" },
+        { true, FT_INT, "ContentTuningID" },
+        { true, FT_INT, "CovenantID" },
+        { true, FT_INT, "Unknown902_22" },
+        { true, FT_INT, "Flags1" },
+        { true, FT_INT, "Flags2" },
+        { true, FT_INT, "Flags3" },
+        { false, FT_INT, "FiltCompletedQuest1" },
+        { false, FT_INT, "FiltCompletedQuest2" },
+        { false, FT_INT, "FiltCompletedQuest3" },
+    };
+
+    static constexpr DB2LoadInfo Instance{ Fields, 29, &QuestV2CliTaskMeta::Instance, HOTFIX_SEL_QUEST_V2_CLI_TASK };
 };
 
 struct QuestXpLoadInfo

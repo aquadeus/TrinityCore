@@ -10197,7 +10197,7 @@ struct QuestPOIBlobMeta
     static constexpr DB2MetaField Fields[10] =
     {
         { FT_INT, 1, false },
-        { FT_SHORT, 1, true },
+        { FT_SHORT, 1, false },
         { FT_INT, 1, true },
         { FT_INT, 1, true },
         { FT_BYTE, 1, false },
