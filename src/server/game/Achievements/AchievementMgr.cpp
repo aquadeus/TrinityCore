@@ -61,8 +61,8 @@ AchievementMgr::~AchievementMgr() { }
 void AchievementMgr::CheckAllAchievementCriteria(Player* referencePlayer)
 {
     // suppress sending packets
-    for (uint32 i = 0; i < uint32(CriteriaType::Count); ++i)
-        UpdateCriteria(CriteriaType(i), 0, 0, 0, nullptr, referencePlayer);
+    for (CriteriaType criteriaType : CriteriaMgr::GetRetroactivelyUpdateableCriteriaTypes())
+        UpdateCriteria(criteriaType, 0, 0, 0, nullptr, referencePlayer);
 }
 
 bool AchievementMgr::HasAchieved(uint32 achievementId) const
@@ -384,7 +384,7 @@ void PlayerAchievementMgr::SendAllData(Player const* /*receiver*/) const
         if (!(achievement->Flags & ACHIEVEMENT_FLAG_ACCOUNT))
         {
             earned.Owner = _owner->GetGUID();
-            earned.VirtualRealmAddress = earned.NativeRealmAddress = GetVirtualRealmAddress();
+            earned.VirtualRealmAddress = earned.NativeRealmAddress = _owner->m_playerData->VirtualPlayerRealm;
         }
     }
 
@@ -443,7 +443,7 @@ void PlayerAchievementMgr::SendAchievementInfo(Player* receiver, uint32 /*achiev
         if (!(achievement->Flags & ACHIEVEMENT_FLAG_ACCOUNT))
         {
             earned.Owner = _owner->GetGUID();
-            earned.VirtualRealmAddress = earned.NativeRealmAddress = GetVirtualRealmAddress();
+            earned.VirtualRealmAddress = earned.NativeRealmAddress = _owner->m_playerData->VirtualPlayerRealm;
         }
     }
 
@@ -664,7 +664,7 @@ void PlayerAchievementMgr::SendAchievementEarned(AchievementEntry const* achieve
         WorldPackets::Achievement::AchievementEarned achievementEarned;
         achievementEarned.Sender = _owner->GetGUID();
         achievementEarned.Earner = _owner->GetGUID();
-        achievementEarned.EarnerNativeRealm = achievementEarned.EarnerVirtualRealm = GetVirtualRealmAddress();
+        achievementEarned.EarnerNativeRealm = achievementEarned.EarnerVirtualRealm = _owner->m_playerData->VirtualPlayerRealm;
         achievementEarned.AchievementID = achievement->ID;
         achievementEarned.Time = *GameTime::GetUtcWowTime();
         achievementEarned.Time += receiver->GetSession()->GetTimezoneOffset();

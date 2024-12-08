@@ -4917,6 +4917,7 @@ class spell_gen_eject_passengers_3_8 : public SpellScript
 };
 
 // 83781 - Reverse Cast Ride Vehicle
+// 258344 - Reverse Cast Ride Vehicle
 class spell_gen_reverse_cast_target_to_caster_triggered: public SpellScript
 {
     void HandleScript(SpellEffIndex effIndex)
@@ -5378,6 +5379,122 @@ private:
     uint64 _health;
 };
 
+// 128648 - Defending Cart Aura
+class spell_bg_defending_cart_aura final : public SpellScript
+{
+    void FilterTargets(std::list<WorldObject*>& targets) const
+    {
+        if (targets.empty())
+            return;
+
+        if (GameObject const* controlZone = GetControlZone())
+        {
+            targets.remove_if([&](WorldObject* obj)
+            {
+                if (Player const* player = obj->ToPlayer())
+                    return GetTeamIdForTeam(player->GetBGTeam()) != controlZone->GetControllingTeam();
+
+                return true;
+            });
+        }
+    }
+
+    GameObject const* GetControlZone() const
+    {
+        if (Unit const* caster = GetCaster())
+        {
+            Unit::AuraEffectList const& auraEffects = caster->GetAuraEffectsByType(SPELL_AURA_ACT_AS_CONTROL_ZONE);
+            for (AuraEffect const* auraEffect : auraEffects)
+                if (GameObject const* gameobject = caster->GetGameObject(auraEffect->GetSpellInfo()->Id))
+                    return gameobject;
+        }
+
+        return nullptr;
+    }
+
+    void Register() override
+    {
+        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_bg_defending_cart_aura::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ALLY);
+    }
+};
+
+// 128648 - Defending Cart Aura
+class spell_bg_defending_cart_aura_AuraScript final : public AuraScript
+{
+    void OnPeriodic(AuraEffect const* /*aurEff*/) const
+    {
+        Unit const* caster = GetCaster();
+        if (!caster)
+            return;
+
+        if (GameObject const* controlZone = GetControlZone())
+            if (!controlZone->GetInsidePlayers()->contains(GetTarget()->GetGUID()))
+                GetTarget()->RemoveAurasDueToSpell(GetSpellInfo()->Id, caster->GetGUID());
+    }
+
+    GameObject const* GetControlZone() const
+    {
+        if (Unit const* caster = GetCaster())
+        {
+            Unit::AuraEffectList const& auraEffects = caster->GetAuraEffectsByType(SPELL_AURA_ACT_AS_CONTROL_ZONE);
+            for (AuraEffect const* auraEffect : auraEffects)
+                if (GameObject const* gameobject = caster->GetGameObject(auraEffect->GetSpellInfo()->Id))
+                    return gameobject;
+        }
+
+        return nullptr;
+    }
+
+    void Register() override
+    {
+        OnEffectPeriodic += AuraEffectPeriodicFn(spell_bg_defending_cart_aura_AuraScript::OnPeriodic, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY);
+    }
+};
+
+// 296837 - Comfortable Rider's Barding
+class spell_gen_comfortable_riders_barding : public AuraScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_DAZED });
+    }
+
+    template <bool apply>
+    void HandleEffect(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/) const
+    {
+        GetTarget()->ApplySpellImmune(GetId(), IMMUNITY_ID, SPELL_DAZED, apply);
+    }
+
+    void Register() override
+    {
+        OnEffectApply += AuraEffectApplyFn(spell_gen_comfortable_riders_barding::HandleEffect<true>, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+        OnEffectRemove += AuraEffectApplyFn(spell_gen_comfortable_riders_barding::HandleEffect<false>, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// 297091 - Parachute
+class spell_gen_saddlechute : public AuraScript
+{
+    static constexpr uint32 SPELL_PARACHUTE = 297092;
+
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_PARACHUTE });
+    }
+
+    void TriggerParachute(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/) const
+    {
+        Unit* target = GetTarget();
+        if (target->IsFlying() || target->IsFalling())
+            target->CastSpell(target, SPELL_PARACHUTE, TRIGGERED_DONT_REPORT_CAST_ERROR);
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectApplyFn(spell_gen_saddlechute::TriggerParachute, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
 void AddSC_generic_spell_scripts()
 {
     RegisterSpellScript(spell_gen_absorb0_hitlimit1);
@@ -5558,4 +5675,7 @@ void AddSC_generic_spell_scripts()
     RegisterSpellScriptWithArgs(spell_gen_set_health, "spell_gen_set_health_1", 1);
     RegisterSpellScriptWithArgs(spell_gen_set_health, "spell_gen_set_health_100", 100);
     RegisterSpellScriptWithArgs(spell_gen_set_health, "spell_gen_set_health_500", 500);
+    RegisterSpellAndAuraScriptPair(spell_bg_defending_cart_aura, spell_bg_defending_cart_aura_AuraScript);
+    RegisterSpellScript(spell_gen_comfortable_riders_barding);
+    RegisterSpellScript(spell_gen_saddlechute);
 }

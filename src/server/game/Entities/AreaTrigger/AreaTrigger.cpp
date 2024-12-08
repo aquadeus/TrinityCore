@@ -53,6 +53,8 @@ AreaTrigger::AreaTrigger() : WorldObject(false), MapObject(), _spawnId(0), _aurE
 
     m_updateFlag.Stationary = true;
     m_updateFlag.AreaTrigger = true;
+
+    m_entityFragments.Add(WowCS::EntityFragment::Tag_AreaTrigger, false);
 }
 
 AreaTrigger::~AreaTrigger()
@@ -193,8 +195,8 @@ bool AreaTrigger::Create(AreaTriggerCreatePropertiesId areaTriggerCreateProperti
 
     SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::VisualAnim).ModifyValue(&UF::VisualAnim::AnimationDataID), GetCreateProperties()->AnimId);
     SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::VisualAnim).ModifyValue(&UF::VisualAnim::AnimKitID), GetCreateProperties()->AnimKitId);
-    if (GetCreateProperties() && GetCreateProperties()->Flags.HasFlag(AreaTriggerCreatePropertiesFlag::Unk3))
-        SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::VisualAnim).ModifyValue(&UF::VisualAnim::Field_C), true);
+    if (GetCreateProperties() && GetCreateProperties()->Flags.HasFlag(AreaTriggerCreatePropertiesFlag::VisualAnimIsDecay))
+        SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::VisualAnim).ModifyValue(&UF::VisualAnim::IsDecay), true);
 
     if (caster)
         PhasingHandler::InheritPhaseShift(this, caster);
@@ -626,13 +628,55 @@ void AreaTrigger::UpdateTargetList()
 
     if (GetTemplate())
     {
-        if (ConditionContainer const* conditions = sConditionMgr->GetConditionsForAreaTrigger(GetTemplate()->Id.Id, GetTemplate()->Id.IsCustom))
+        ConditionContainer const* conditions = sConditionMgr->GetConditionsForAreaTrigger(GetTemplate()->Id.Id, GetTemplate()->Id.IsCustom);
+        Trinity::Containers::EraseIf(targetList, [this, conditions](Unit const* target)
         {
-            Trinity::Containers::EraseIf(targetList, [conditions](Unit const* target)
+            if (GetCasterGuid() == target->GetGUID())
             {
+                if (HasActionSetFlag(AreaTriggerActionSetFlag::NotTriggeredbyCaster))
+                    return true;
+            }
+            else
+            {
+                if (HasActionSetFlag(AreaTriggerActionSetFlag::OnlyTriggeredByCaster))
+                    return true;
+
+                if (HasActionSetFlag(AreaTriggerActionSetFlag::CreatorsPartyOnly))
+                {
+                    Unit* caster = GetCaster();
+                    if (!caster)
+                        return true;
+
+                    if (!caster->IsInRaidWith(target))
+                        return true;
+                }
+            }
+
+            if (Player const* player = target->ToPlayer())
+            {
+                switch (player->getDeathState())
+                {
+                    case DEAD:
+                        if (!HasActionSetFlag(AreaTriggerActionSetFlag::AllowWhileGhost))
+                            return true;
+                        break;
+                    case CORPSE:
+                        if (!HasActionSetFlag(AreaTriggerActionSetFlag::AllowWhileDead))
+                            return true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (!HasActionSetFlag(AreaTriggerActionSetFlag::CanAffectUninteractible) && target->IsUninteractible())
+                return true;
+
+            if (conditions)
                 return !sConditionMgr->IsObjectMeetToConditions(target, *conditions);
-            });
-        }
+
+            return false;
+        });
     }
 
     HandleUnitEnterExit(targetList);
@@ -640,7 +684,7 @@ void AreaTrigger::UpdateTargetList()
 
 void AreaTrigger::SearchUnits(std::vector<Unit*>& targetList, float radius, bool check3D)
 {
-    Trinity::AnyUnitInObjectRangeCheck check(this, radius, check3D);
+    Trinity::AnyUnitInObjectRangeCheck check(this, radius, check3D, false);
     if (IsStaticSpawn())
     {
         Trinity::PlayerListSearcher<Trinity::AnyUnitInObjectRangeCheck> searcher(this, targetList, check);
@@ -803,6 +847,9 @@ void AreaTrigger::HandleUnitEnterExit(std::vector<Unit*> const& newTargetList)
                 ChatHandler(player->GetSession()).PSendSysMessage(LANG_DEBUG_AREATRIGGER_ENTITY_ENTERED, GetEntry(), IsCustom(), IsStaticSpawn(), _spawnId);
 
             player->UpdateQuestObjectiveProgress(QUEST_OBJECTIVE_AREA_TRIGGER_ENTER, GetEntry(), 1);
+
+            if (GetTemplate()->ActionSetId)
+                player->UpdateCriteria(CriteriaType::EnterAreaTriggerWithActionSet, GetTemplate()->ActionSetId);
         }
 
         DoActions(unit);
@@ -820,6 +867,9 @@ void AreaTrigger::HandleUnitEnterExit(std::vector<Unit*> const& newTargetList)
                     ChatHandler(player->GetSession()).PSendSysMessage(LANG_DEBUG_AREATRIGGER_ENTITY_LEFT, GetEntry(), IsCustom(), IsStaticSpawn(), _spawnId);
 
                 player->UpdateQuestObjectiveProgress(QUEST_OBJECTIVE_AREA_TRIGGER_EXIT, GetEntry(), 1);
+
+                if (GetTemplate()->ActionSetId)
+                    player->UpdateCriteria(CriteriaType::LeaveAreaTriggerWithActionSet, GetTemplate()->ActionSetId);
             }
 
             UndoActions(leavingUnit);
@@ -1328,22 +1378,14 @@ bool AreaTrigger::IsNeverVisibleFor(WorldObject const* seer, bool allowServersid
     return false;
 }
 
-void AreaTrigger::BuildValuesCreate(ByteBuffer* data, Player const* target) const
+void AreaTrigger::BuildValuesCreate(ByteBuffer* data, UF::UpdateFieldFlag flags, Player const* target) const
 {
-    UF::UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-    std::size_t sizePos = data->wpos();
-    *data << uint32(0);
-    *data << uint8(flags);
     m_objectData->WriteCreate(*data, flags, this, target);
     m_areaTriggerData->WriteCreate(*data, flags, this, target);
-    data->put<uint32>(sizePos, data->wpos() - sizePos - 4);
 }
 
-void AreaTrigger::BuildValuesUpdate(ByteBuffer* data, Player const* target) const
+void AreaTrigger::BuildValuesUpdate(ByteBuffer* data, UF::UpdateFieldFlag flags, Player const* target) const
 {
-    UF::UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
-    std::size_t sizePos = data->wpos();
-    *data << uint32(0);
     *data << uint32(m_values.GetChangedObjectTypeMask());
 
     if (m_values.HasChanged(TYPEID_OBJECT))
@@ -1351,13 +1393,12 @@ void AreaTrigger::BuildValuesUpdate(ByteBuffer* data, Player const* target) cons
 
     if (m_values.HasChanged(TYPEID_AREATRIGGER))
         m_areaTriggerData->WriteUpdate(*data, flags, this, target);
-
-    data->put<uint32>(sizePos, data->wpos() - sizePos - 4);
 }
 
 void AreaTrigger::BuildValuesUpdateForPlayerWithMask(UpdateData* data, UF::ObjectData::Mask const& requestedObjectMask,
     UF::AreaTriggerData::Mask const& requestedAreaTriggerMask, Player const* target) const
 {
+    UF::UpdateFieldFlag flags = GetUpdateFieldFlagsFor(target);
     UpdateMask<NUM_CLIENT_OBJECT_TYPES> valuesMask;
     if (requestedObjectMask.IsAnySet())
         valuesMask.Set(TYPEID_OBJECT);
@@ -1368,6 +1409,7 @@ void AreaTrigger::BuildValuesUpdateForPlayerWithMask(UpdateData* data, UF::Objec
     ByteBuffer& buffer = PrepareValuesUpdateBuffer(data);
     std::size_t sizePos = buffer.wpos();
     buffer << uint32(0);
+    BuildEntityFragmentsForValuesUpdateForPlayerWithMask(&buffer, flags);
     buffer << uint32(valuesMask.GetBlock(0));
 
     if (valuesMask[TYPEID_OBJECT])

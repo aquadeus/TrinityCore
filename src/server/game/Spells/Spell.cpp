@@ -2775,7 +2775,7 @@ void Spell::TargetInfo::DoTargetSpellHit(Spell* spell, SpellEffectInfo const& sp
     spell->m_damage = Damage;
     spell->m_healing = Healing;
 
-    if (unit->IsAlive() != IsAlive)
+    if (unit->IsAlive() != IsAlive && !spell->m_spellInfo->HasAttribute(SPELL_ATTR9_FORCE_CORPSE_TARGET))
         return;
 
     if (!spell->m_spellInfo->HasAttribute(SPELL_ATTR8_IGNORE_SANCTUARY) && spell->getState() == SPELL_STATE_DELAYED && !spell->IsPositive() && (GameTime::GetGameTimeMS() - TimeDelay) <= unit->m_lastSanctuaryTime)
@@ -4347,7 +4347,7 @@ void Spell::update(uint32 difftime)
 
             if (IsEmpowerSpell())
             {
-                auto getCompletedEmpowerStages = [&]() -> int32
+                int32 completedStages = [&]() -> int32
                 {
                     Milliseconds passed(m_channeledDuration - m_timer);
                     for (std::size_t i = 0; i < m_empower->StageDurations.size(); ++i)
@@ -4358,9 +4358,8 @@ void Spell::update(uint32 difftime)
                     }
 
                     return m_empower->StageDurations.size();
-                };
+                }();
 
-                int32 completedStages = getCompletedEmpowerStages();
                 if (completedStages != m_empower->CompletedStages)
                 {
                     WorldPackets::Spells::SpellEmpowerSetStage empowerSetStage;
@@ -4370,7 +4369,8 @@ void Spell::update(uint32 difftime)
                     m_caster->SendMessageToSet(empowerSetStage.Write(), true);
 
                     m_empower->CompletedStages = completedStages;
-                    m_caster->ToUnit()->SetSpellEmpowerStage(completedStages);
+                    if (Unit* unitCaster = m_caster->ToUnit())
+                        unitCaster->SetSpellEmpowerStage(completedStages);
 
                     CallScriptEmpowerStageCompletedHandlers(completedStages);
                 }
@@ -4380,6 +4380,7 @@ void Spell::update(uint32 difftime)
                     m_empower->IsReleased = true;
                     m_timer = 0;
                     CallScriptEmpowerCompletedHandlers(m_empower->CompletedStages);
+                    m_caster->ToUnit()->RemoveAurasWithInterruptFlags(SpellAuraInterruptFlags2::ReleaseEmpower, m_spellInfo);
                 }
             }
 
@@ -5191,7 +5192,7 @@ SpellLogEffect& Spell::GetExecuteLogEffect(SpellEffectName effect)
     return _executeLogEffects.back();
 }
 
-void Spell::ExecuteLogEffectTakeTargetPower(SpellEffectName effect, Unit* target, uint32 powerType, uint32 points, float amplitude)
+void Spell::ExecuteLogEffectTakeTargetPower(SpellEffectName effect, Unit* target, Powers powerType, uint32 points, float amplitude)
 {
     SpellLogEffectPowerDrainParams spellLogEffectPowerDrainParams;
 
@@ -5457,7 +5458,11 @@ void Spell::SendResurrectRequest(Player* target)
 
     WorldPackets::Spells::ResurrectRequest resurrectRequest;
     resurrectRequest.ResurrectOffererGUID =  m_caster->GetGUID();
-    resurrectRequest.ResurrectOffererVirtualRealmAddress = GetVirtualRealmAddress();
+    if (Player const* playerCaster = m_caster->ToPlayer())
+        resurrectRequest.ResurrectOffererVirtualRealmAddress = playerCaster->m_playerData->VirtualPlayerRealm;
+    else
+        resurrectRequest.ResurrectOffererVirtualRealmAddress = GetVirtualRealmAddress();
+
     resurrectRequest.Name = sentName;
     resurrectRequest.Sickness = m_caster->IsUnit() && m_caster->ToUnit()->IsSpiritHealer(); // "you'll be afflicted with resurrection sickness"
     resurrectRequest.UseTimer = !m_spellInfo->HasAttribute(SPELL_ATTR3_NO_RES_TIMER);
@@ -7407,6 +7412,13 @@ SpellCastResult Spell::CheckRange(bool strict) const
     return SPELL_CAST_OK;
 }
 
+bool Spell::CanIncreaseRangeByMovement(Unit const* unit)
+{
+    // forward running only
+    return unit->HasUnitMovementFlag(MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_STRAFE_LEFT | MOVEMENTFLAG_STRAFE_RIGHT | MOVEMENTFLAG_FALLING)
+        && !unit->IsWalking();
+}
+
 std::pair<float, float> Spell::GetMinMaxRange(bool strict) const
 {
     float rangeMod = 0.0f;
@@ -7448,7 +7460,7 @@ std::pair<float, float> Spell::GetMinMaxRange(bool strict) const
             }
         }
 
-        if (target && unitCaster && unitCaster->isMoving() && target->isMoving() && !unitCaster->IsWalking() && !target->IsWalking() &&
+        if (target && unitCaster && CanIncreaseRangeByMovement(target) && CanIncreaseRangeByMovement(unitCaster) &&
             ((m_spellInfo->RangeEntry->Flags & SPELL_RANGE_MELEE) || target->GetTypeId() == TYPEID_PLAYER))
             rangeMod += 8.0f / 3.0f;
     }
@@ -7777,9 +7789,19 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
                 if (!targetItem)
                     return SPELL_FAILED_ITEM_NOT_FOUND;
 
-                // required level has to be checked also! Exploit fix
-                if (targetItem->GetItemLevel(targetItem->GetOwner()) < m_spellInfo->BaseLevel || (targetItem->GetRequiredLevel() && uint32(targetItem->GetRequiredLevel()) < m_spellInfo->BaseLevel))
-                    return SPELL_FAILED_LOWLEVEL;
+                // Apply item level restriction
+                if (!m_spellInfo->HasAttribute(SPELL_ATTR2_ALLOW_LOW_LEVEL_BUFF))
+                {
+                    uint32 requiredLevel = targetItem->GetRequiredLevel();
+                    if (!requiredLevel)
+                        requiredLevel = targetItem->GetItemLevel(targetItem->GetOwner());
+
+                    if (requiredLevel < m_spellInfo->BaseLevel)
+                        return SPELL_FAILED_LOWLEVEL;
+                }
+                if ((m_CastItem || effectInfo->IsEffect(SPELL_EFFECT_ENCHANT_ITEM_PRISMATIC))
+                    && m_spellInfo->MaxLevel > 0 && targetItem->GetItemLevel(targetItem->GetOwner()) > m_spellInfo->MaxLevel)
+                    return SPELL_FAILED_HIGHLEVEL;
 
                 bool isItemUsable = false;
                 for (ItemEffectEntry const* itemEffect : targetItem->GetEffects())
@@ -7844,14 +7866,18 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
                         return SPELL_FAILED_NOT_TRADEABLE;
                 }
 
-                // Apply item level restriction if the enchanting spell has max level restrition set
-                if (m_CastItem && m_spellInfo->MaxLevel > 0)
+                // Apply item level restriction
+                if (!m_spellInfo->HasAttribute(SPELL_ATTR2_ALLOW_LOW_LEVEL_BUFF))
                 {
-                    if (item->GetTemplate()->GetBaseItemLevel() < (uint32)m_CastItem->GetTemplate()->GetBaseRequiredLevel())
+                    uint32 requiredLevel = item->GetRequiredLevel();
+                    if (!requiredLevel)
+                        requiredLevel = item->GetItemLevel(item->GetOwner());
+
+                    if (requiredLevel < m_spellInfo->BaseLevel)
                         return SPELL_FAILED_LOWLEVEL;
-                    if (item->GetTemplate()->GetBaseItemLevel() > m_spellInfo->MaxLevel)
-                        return SPELL_FAILED_HIGHLEVEL;
                 }
+                if (m_CastItem && m_spellInfo->MaxLevel > 0 && item->GetItemLevel(item->GetOwner()) > m_spellInfo->MaxLevel)
+                    return SPELL_FAILED_HIGHLEVEL;
                 break;
             }
             case SPELL_EFFECT_ENCHANT_HELD_ITEM:
@@ -7871,10 +7897,10 @@ SpellCastResult Spell::CheckItems(int32* param1 /*= nullptr*/, int32* param2 /*=
                 if (!itemProto)
                     return SPELL_FAILED_CANT_BE_SALVAGED;
 
-                ItemDisenchantLootEntry const* itemDisenchantLoot = item->GetDisenchantLoot(m_caster->ToPlayer());
-                if (!itemDisenchantLoot)
+                Optional<uint16> disenchantSkillRequired = item->GetDisenchantSkillRequired();
+                if (!disenchantSkillRequired)
                     return SPELL_FAILED_CANT_BE_SALVAGED;
-                if (itemDisenchantLoot->SkillRequired > player->GetSkillValue(SKILL_ENCHANTING))
+                if (disenchantSkillRequired > player->GetSkillValue(SKILL_ENCHANTING))
                     return SPELL_FAILED_CANT_BE_SALVAGED_SKILL;
                 break;
             }
@@ -8782,20 +8808,11 @@ void Spell::SetSpellValue(SpellValueMod mod, int32 value)
 
     switch (mod)
     {
-        case SPELLVALUE_RADIUS_MOD:
-            m_spellValue->RadiusMod = (float)value / 10000;
-            break;
         case SPELLVALUE_MAX_TARGETS:
             m_spellValue->MaxAffectedTargets = (uint32)value;
             break;
         case SPELLVALUE_AURA_STACK:
             m_spellValue->AuraStackAmount = uint8(value);
-            break;
-        case SPELLVALUE_CRIT_CHANCE:
-            m_spellValue->CriticalChance = value / 100.0f; // @todo ugly /100 remove when basepoints are double
-            break;
-        case SPELLVALUE_DURATION_PCT:
-            m_spellValue->DurationMul = float(value) / 100.0f;
             break;
         case SPELLVALUE_DURATION:
             m_spellValue->Duration = value;
@@ -8805,6 +8822,24 @@ void Spell::SetSpellValue(SpellValueMod mod, int32 value)
             break;
         case SPELLVALUE_PARENT_SPELL_TARGET_INDEX:
             m_spellValue->ParentSpellTargetIndex = value;
+            break;
+        default:
+            break;
+    }
+}
+
+void Spell::SetSpellValue(SpellValueModFloat mod, float value)
+{
+    switch (mod)
+    {
+        case SPELLVALUE_RADIUS_MOD:
+            m_spellValue->RadiusMod = value;
+            break;
+        case SPELLVALUE_CRIT_CHANCE:
+            m_spellValue->CriticalChance = value;
+            break;
+        case SPELLVALUE_DURATION_PCT:
+            m_spellValue->DurationMul = value / 100.0f;
             break;
         default:
             break;
@@ -9113,21 +9148,37 @@ void Spell::CallScriptEmpowerCompletedHandlers(int32 completedStagesCount)
 
 bool Spell::CheckScriptEffectImplicitTargets(uint32 effIndex, uint32 effIndexToCheck)
 {
-    // Skip if there are not any script
-    if (m_loadedScripts.empty())
+    auto allEffectTargetScriptsAreShared = []<typename HookType>(HookList<HookType> const& hooks, SpellInfo const* spellInfo, uint32 effIndex, uint32 effIndexToCheck)
+    {
+        for (HookType const& hook : hooks)
+        {
+            if (!hook.IsEffectAffected(spellInfo, effIndex))
+                continue;
+
+            bool otherEffectHasSameTargetFunction = std::ranges::any_of(hooks, [&](HookType const& other)
+            {
+                return other.IsEffectAffected(spellInfo, effIndexToCheck) && hook.HasSameTargetFunctionAs(other);
+            });
+            if (!otherEffectHasSameTargetFunction)
+                return false;
+        }
+
         return true;
+    };
 
     for (SpellScript* script : m_loadedScripts)
     {
-        for (SpellScript::ObjectTargetSelectHandler const& objectTargetSelect : script->OnObjectTargetSelect)
-            if ((objectTargetSelect.IsEffectAffected(m_spellInfo, effIndex) && !objectTargetSelect.IsEffectAffected(m_spellInfo, effIndexToCheck)) ||
-                (!objectTargetSelect.IsEffectAffected(m_spellInfo, effIndex) && objectTargetSelect.IsEffectAffected(m_spellInfo, effIndexToCheck)))
-                return false;
+        if (!allEffectTargetScriptsAreShared(script->OnObjectTargetSelect, m_spellInfo, effIndex, effIndexToCheck))
+            return false;
 
-        for (SpellScript::ObjectAreaTargetSelectHandler const& objectAreaTargetSelect : script->OnObjectAreaTargetSelect)
-            if ((objectAreaTargetSelect.IsEffectAffected(m_spellInfo, effIndex) && !objectAreaTargetSelect.IsEffectAffected(m_spellInfo, effIndexToCheck)) ||
-                (!objectAreaTargetSelect.IsEffectAffected(m_spellInfo, effIndex) && objectAreaTargetSelect.IsEffectAffected(m_spellInfo, effIndexToCheck)))
-                return false;
+        if (!allEffectTargetScriptsAreShared(script->OnObjectTargetSelect, m_spellInfo, effIndexToCheck, effIndex))
+            return false;
+
+        if (!allEffectTargetScriptsAreShared(script->OnObjectAreaTargetSelect, m_spellInfo, effIndex, effIndexToCheck))
+            return false;
+
+        if (!allEffectTargetScriptsAreShared(script->OnObjectAreaTargetSelect, m_spellInfo, effIndexToCheck, effIndex))
+            return false;
     }
     return true;
 }
@@ -9635,18 +9686,11 @@ CastSpellExtraArgs& CastSpellExtraArgs::SetTriggeringSpell(Spell const* triggeri
     TriggeringSpell = triggeringSpell;
     if (triggeringSpell)
     {
-        OriginalCastItemLevel = triggeringSpell->m_castItemLevel;
-        OriginalCastId = triggeringSpell->m_castId;
+        if (!OriginalCastItemLevel)
+            OriginalCastItemLevel = triggeringSpell->m_castItemLevel;
+        if (!OriginalCastId)
+            OriginalCastId = triggeringSpell->m_castId;
     }
-    return *this;
-}
-
-CastSpellExtraArgs& CastSpellExtraArgs::SetTriggeringAura(AuraEffect const* triggeringAura)
-{
-    TriggeringAura = triggeringAura;
-    if (triggeringAura)
-        OriginalCastId = triggeringAura->GetBase()->GetCastId();
-
     return *this;
 }
 
