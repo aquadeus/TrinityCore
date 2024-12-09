@@ -404,7 +404,7 @@ class TC_GAME_API ItemScript : public ScriptObject
         virtual bool OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo const* spellInfo, Item* item);
 
         // Called after looting item
-        virtual void OnLoot(Player* player, Item* item, uint32 count);
+        virtual bool OnLoot(Player* player, Item* item, uint32 count);
 };
 
 class TC_GAME_API UnitScript : public ScriptObject
