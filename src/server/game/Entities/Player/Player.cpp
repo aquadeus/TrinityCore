@@ -26687,6 +26687,8 @@ void Player::StoreLootItem(ObjectGuid lootWorldObjectGuid, uint8 lootSlot, Loot*
             else
                 ApplyItemLootedSpell(sObjectMgr->GetItemTemplate(item->itemid));
 
+            sScriptMgr->OnLoot(this, newitem, item->count);
+
             break;
         }
         case LootItemType::Currency:

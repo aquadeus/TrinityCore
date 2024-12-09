@@ -1704,6 +1704,16 @@ bool ScriptMgr::OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo co
     return tmpscript->OnCastItemCombatSpell(player, victim, spellInfo, item);
 }
 
+bool ScriptMgr::OnLoot(Player* player, Item* item, uint32 count)
+{
+    ASSERT(player);
+    ASSERT(item);
+    ASSERT(count);
+
+    GET_SCRIPT_RET(ItemScript, item->GetScriptId(), tmpscript, false);
+    return tmpscript->OnLoot(player, item, count);
+}
+
 bool ScriptMgr::CanCreateCreatureAI(uint32 scriptId) const
 {
     return !!ScriptRegistry<CreatureScript>::Instance()->GetScriptById(scriptId);
@@ -2641,6 +2651,11 @@ bool ItemScript::OnRemove(Player* /*player*/, Item* /*item*/)
 }
 
 bool ItemScript::OnCastItemCombatSpell(Player* /*player*/, Unit* /*victim*/, SpellInfo const* /*spellInfo*/, Item* /*item*/)
+{
+    return true;
+}
+
+bool ItemScript::OnLoot(Player* /*player*/, Item* /*item*/, uint32 /*count*/)
 {
     return true;
 }
