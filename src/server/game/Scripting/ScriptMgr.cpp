@@ -1704,7 +1704,7 @@ bool ScriptMgr::OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo co
     return tmpscript->OnCastItemCombatSpell(player, victim, spellInfo, item);
 }
 
-bool ScriptMgr::OnLoot(Player* player, Item* item, uint32 count)
+bool ScriptMgr::OnItemLoot(Player* player, Item* item, uint32 count)
 {
     ASSERT(player);
     ASSERT(item);
@@ -2657,7 +2657,7 @@ bool ItemScript::OnCastItemCombatSpell(Player* /*player*/, Unit* /*victim*/, Spe
 
 bool ItemScript::OnLoot(Player* /*player*/, Item* /*item*/, uint32 /*count*/)
 {
-    return true;
+    return false;
 }
 
 UnitScript::UnitScript(char const* name)

@@ -26680,7 +26680,10 @@ void Player::StoreLootItem(ObjectGuid lootWorldObjectGuid, uint8 lootSlot, Loot*
                 UpdateCriteria(CriteriaType::LootAnyItem, item->itemid, item->count);
             }
             else
+            {
                 aeResult->Add(newitem, item->count, GetLootTypeForClient(loot->loot_type), loot->GetDungeonEncounterId());
+                sScriptMgr->OnItemLoot(this, newitem, item->count);
+            }
 
             if (newitem)
                 ApplyItemLootedSpell(newitem, true);

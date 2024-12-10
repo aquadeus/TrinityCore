@@ -1123,7 +1123,7 @@ class TC_GAME_API ScriptMgr
         bool OnItemExpire(Player* player, ItemTemplate const* proto);
         bool OnItemRemove(Player* player, Item* item);
         bool OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo const* spellInfo, Item* item);
-        bool OnLoot(Player* player, Item* item, uint32 count);
+        bool OnItemLoot(Player* player, Item* item, uint32 count);
 
     public: /* CreatureScript */
 
