@@ -5004,6 +5004,22 @@ void SpellMgr::LoadSpellInfoCorrections()
     // ENDOF THE WANDERING ISLE SPELLS
     //
 
+    //
+    // THE STONEVAULT SPELLS
+    //
+
+    // Lava Cannon
+    ApplySpellFix({ 449167 }, [](SpellInfo* spellInfo)
+    {
+        ApplySpellEffectFix(spellInfo, EFFECT_1, [](SpellEffectInfo* spellEffectInfo)
+        {
+            spellEffectInfo->TargetB = SpellImplicitTargetInfo(TARGET_DEST_DEST_BACK_LEFT);
+        });
+    });
+
+    // ENDOF THE STONEVAULT SPELLS
+    //
+
     // Earthquake
     ApplySpellFix({ 61882 }, [](SpellInfo* spellInfo)
     {
