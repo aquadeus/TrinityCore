@@ -7060,6 +7060,9 @@ int32 Unit::SpellBaseDamageBonusDone(SpellSchoolMask schoolMask) const
         if (GetPowerIndex(POWER_MANA) != MAX_POWERS)
             DoneAdvertisedBenefit += std::max(0, int32(GetStat(STAT_INTELLECT)));  // spellpower from intellect
 
+        // Spell power from SPELL_AURA_MOD_SPELL_POWER_PCT
+        DoneAdvertisedBenefit *= GetTotalAuraMultiplier(SPELL_AURA_MOD_SPELL_POWER_PCT);
+
         // Damage bonus from stats
         AuraEffectList const& mDamageDoneOfStatPercent = GetAuraEffectsByType(SPELL_AURA_MOD_SPELL_DAMAGE_OF_STAT_PERCENT);
         for (AuraEffect const* aurEff : mDamageDoneOfStatPercent)
@@ -7548,6 +7551,8 @@ int32 Unit::SpellBaseHealingBonusDone(SpellSchoolMask schoolMask) const
         // Check if we are ever using mana - PaperDollFrame.lua
         if (GetPowerIndex(POWER_MANA) != MAX_POWERS)
             advertisedBenefit += std::max(0, int32(GetStat(STAT_INTELLECT)));  // spellpower from intellect
+
+        advertisedBenefit *= GetTotalAuraMultiplier(SPELL_AURA_MOD_SPELL_POWER_PCT);
 
         // Healing bonus from stats
         AuraEffectList const& mHealingDoneOfStatPercent = GetAuraEffectsByType(SPELL_AURA_MOD_SPELL_HEALING_OF_STAT_PERCENT);
