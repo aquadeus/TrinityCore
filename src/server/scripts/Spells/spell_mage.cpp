@@ -23,6 +23,7 @@
 
 #include "AreaTrigger.h"
 #include "AreaTriggerAI.h"
+#include "Containers.h"
 #include "DB2Stores.h"
 #include "GridNotifiers.h"
 #include "ObjectAccessor.h"
@@ -62,6 +63,7 @@ enum MageSpells
     SPELL_MAGE_DRAGONHAWK_FORM                   = 32818,
     SPELL_MAGE_ETHEREAL_BLINK                    = 410939,
     SPELL_MAGE_EVERWARM_SOCKS                    = 320913,
+    SPELL_MAGE_EXPLOSIVE_INGENUITY               = 451760,
     SPELL_MAGE_FEEL_THE_BURN                     = 383391,
     SPELL_MAGE_FIERY_RUSH_AURA                   = 383637,
     SPELL_MAGE_FINGERS_OF_FROST                  = 44544,
@@ -85,8 +87,12 @@ enum MageSpells
     SPELL_MAGE_IMPROVED_COMBUSTION               = 383967,
     SPELL_MAGE_IMPROVED_SCORCH                   = 383608,
     SPELL_MAGE_INCANTERS_FLOW                    = 116267,
+    SPELL_MAGE_LIT_FUSE_AURA                     = 453207,
+    SPELL_MAGE_LIT_FUSE_TALENT                   = 450716,
     SPELL_MAGE_LIVING_BOMB_EXPLOSION             = 44461,
+    SPELL_MAGE_LIVING_BOMB_EXPLOSION_NO_SPREAD   = 453251,
     SPELL_MAGE_LIVING_BOMB_PERIODIC              = 217694,
+    SPELL_MAGE_LIVING_BOMB_PERIODIC_NO_SPREAD    = 244813,
     SPELL_MAGE_MANA_SURGE                        = 37445,
     SPELL_MAGE_MASTER_OF_TIME                    = 342249,
     SPELL_MAGE_METEOR_AREATRIGGER                = 177345,
@@ -1447,48 +1453,92 @@ private:
     int8 modifier = 1;
 };
 
-// 44457 - Living Bomb
-class spell_mage_living_bomb : public SpellScript
+// 450716 - Lit Fuse (attached to 48108 - Hot Streak!)
+class spell_mage_lit_fuse : public AuraScript
 {
     bool Validate(SpellInfo const* /*spellInfo*/) override
     {
-        return ValidateSpellInfo({ SPELL_MAGE_LIVING_BOMB_PERIODIC });
+        return ValidateSpellInfo({ SPELL_MAGE_LIT_FUSE_TALENT, SPELL_MAGE_LIT_FUSE_AURA, SPELL_MAGE_EXPLOSIVE_INGENUITY });
     }
 
-    void HandleDummy(SpellEffIndex effIndex)
+    bool Load() override
     {
-        PreventHitDefaultEffect(effIndex);
-        GetCaster()->CastSpell(GetHitUnit(), SPELL_MAGE_LIVING_BOMB_PERIODIC, CastSpellExtraArgs(TRIGGERED_FULL_MASK).AddSpellMod(SPELLVALUE_BASE_POINT2, 1));
+        return GetUnitOwner()->HasAura(SPELL_MAGE_LIT_FUSE_TALENT);
+    }
+
+    void HandleProc(ProcEventInfo const& eventInfo) const
+    {
+        Unit* caster = eventInfo.GetActor();
+        AuraEffect const* litFuse = caster->GetAuraEffect(SPELL_MAGE_LIT_FUSE_TALENT, EFFECT_3);
+
+        int32 amount = litFuse->GetAmount();
+
+        if (AuraEffect const* explosiveIngenuity = caster->GetAuraEffect(SPELL_MAGE_EXPLOSIVE_INGENUITY, EFFECT_0))
+            amount += explosiveIngenuity->GetAmount();
+
+        if (roll_chance_i(amount))
+            caster->CastSpell(caster, SPELL_MAGE_LIT_FUSE_AURA, CastSpellExtraArgsInit{
+                .TriggerFlags = TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR,
+                .TriggeringSpell = eventInfo.GetProcSpell()
+            });
     }
 
     void Register() override
     {
-        OnEffectHitTarget += SpellEffectFn(spell_mage_living_bomb::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+        OnProc += AuraProcFn(spell_mage_lit_fuse::HandleProc);
     }
 };
+
+// 453207 - Lit Fuse
+class spell_mage_lit_fuse_proc : public AuraScript
+{
+    bool Validate(SpellInfo const* /*spell*/) override
+    {
+        return ValidateSpellInfo({ SPELL_MAGE_LIVING_BOMB_PERIODIC });
+    }
+
+    static void HandleProc(AuraScript const&, AuraEffect const* /*aurEff*/, ProcEventInfo const& eventInfo)
+    {
+        eventInfo.GetActor()->CastSpell(eventInfo.GetActionTarget(), SPELL_MAGE_LIVING_BOMB_PERIODIC);
+    }
+
+    void Register() override
+    {
+        OnEffectProc += AuraEffectProcFn(spell_mage_lit_fuse_proc::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+    }
+};
+
+/*
+DELETE FROM `spell_proc` WHERE `SpellId` IN (453207);
+INSERT INTO `spell_proc` (`SpellId`,`SchoolMask`,`SpellFamilyName`,`SpellFamilyMask0`,`SpellFamilyMask1`,`SpellFamilyMask2`,`SpellFamilyMask3`,`ProcFlags`,`ProcFlags2`,`SpellTypeMask`,`SpellPhaseMask`,`HitMask`,`AttributesMask`,`DisableEffectsMask`,`ProcsPerMinute`,`Chance`,`Cooldown`,`Charges`) VALUES
+(453207,0x00,3,0x00000002,0x00000000,0x00000000,0x00000000,0x0,0x0,0x1,0x2,0x0,0x10,0x0,0,0,0,0); -- Lit Fuse
+
+*/
 
 // 44461 - Living Bomb
 class spell_mage_living_bomb_explosion : public SpellScript
 {
     bool Validate(SpellInfo const* spellInfo) override
     {
-        return spellInfo->NeedsExplicitUnitTarget() && ValidateSpellInfo({ SPELL_MAGE_LIVING_BOMB_PERIODIC });
+        return spellInfo->NeedsExplicitUnitTarget() && ValidateSpellInfo({ SPELL_MAGE_LIVING_BOMB_PERIODIC_NO_SPREAD, SPELL_MAGE_LIT_FUSE_TALENT });
     }
 
-    void FilterTargets(std::list<WorldObject*>& targets)
+    void HandleSpread(SpellEffIndex /*effIndex*/) const
     {
-        targets.remove(GetExplTargetWorldObject());
-    }
+        Unit* caster = GetCaster();
+        AuraEffect const* litFuse = caster->GetAuraEffect(SPELL_MAGE_LIT_FUSE_TALENT, EFFECT_2);
+        if (!litFuse)
+            return;
 
-    void HandleSpread(SpellEffIndex /*effIndex*/)
-    {
-        if (GetSpellValue()->EffectBasePoints[EFFECT_0] > 0)
-            GetCaster()->CastSpell(GetHitUnit(), SPELL_MAGE_LIVING_BOMB_PERIODIC, CastSpellExtraArgs(TRIGGERED_FULL_MASK).AddSpellMod(SPELLVALUE_BASE_POINT2, 0));
+        caster->CastSpell(GetHitUnit(), SPELL_MAGE_LIVING_BOMB_PERIODIC_NO_SPREAD, CastSpellExtraArgsInit{
+            .TriggerFlags = TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR,
+            .TriggeringSpell = GetSpell(),
+            .SpellValueOverrides = { { SPELLVALUE_MAX_TARGETS, litFuse->GetAmount() } }
+        });
     }
 
     void Register() override
     {
-        OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_mage_living_bomb_explosion::FilterTargets, EFFECT_1, TARGET_UNIT_DEST_AREA_ENEMY);
         OnEffectHitTarget += SpellEffectFn(spell_mage_living_bomb_explosion::HandleSpread, EFFECT_1, SPELL_EFFECT_SCHOOL_DAMAGE);
     }
 };
@@ -1501,18 +1551,49 @@ class spell_mage_living_bomb_periodic : public AuraScript
         return ValidateSpellInfo({ SPELL_MAGE_LIVING_BOMB_EXPLOSION });
     }
 
-    void AfterRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+    void AfterRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/) const
     {
         if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_EXPIRE)
             return;
 
-        if (Unit* caster = GetCaster())
-            caster->CastSpell(GetTarget(), SPELL_MAGE_LIVING_BOMB_EXPLOSION, CastSpellExtraArgs(TRIGGERED_FULL_MASK).AddSpellMod(SPELLVALUE_BASE_POINT0, aurEff->GetAmount()));
+        Unit* caster = GetCaster();
+
+        if (!caster)
+            return;
+
+        caster->CastSpell(GetTarget(), SPELL_MAGE_LIVING_BOMB_EXPLOSION, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
     }
 
     void Register() override
     {
-        AfterEffectRemove += AuraEffectRemoveFn(spell_mage_living_bomb_periodic::AfterRemove, EFFECT_2, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+        AfterEffectRemove += AuraEffectRemoveFn(spell_mage_living_bomb_periodic::AfterRemove, EFFECT_1, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+    }
+};
+
+// 244813 - Living Bomb
+class spell_mage_living_bomb_periodic_no_spread : public AuraScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ SPELL_MAGE_LIVING_BOMB_EXPLOSION_NO_SPREAD });
+    }
+
+    void AfterRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/) const
+    {
+        if (GetTargetApplication()->GetRemoveMode() != AURA_REMOVE_BY_EXPIRE)
+            return;
+
+        Unit* caster = GetCaster();
+
+        if (!caster)
+            return;
+
+        caster->CastSpell(GetTarget(), SPELL_MAGE_LIVING_BOMB_EXPLOSION_NO_SPREAD, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
+    }
+
+    void Register() override
+    {
+        AfterEffectRemove += AuraEffectRemoveFn(spell_mage_living_bomb_periodic_no_spread::AfterRemove, EFFECT_1, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
     }
 };
 
@@ -1564,7 +1645,7 @@ struct at_mage_meteor_burn : public AreaTriggerAI
                 caster->CastSpell(unit, SPELL_MAGE_METEOR_BURN_DAMAGE, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
     }
 
-    void OnUnitExit(Unit* unit, AreaTriggerExitReason /*reason*/) override
+    void OnUnitExit(Unit* unit) override
     {
         unit->RemoveAurasDueToSpell(SPELL_MAGE_METEOR_BURN_DAMAGE, at->GetCasterGuid());
     }
@@ -2137,9 +2218,11 @@ void AddSC_mage_spell_scripts()
     RegisterSpellScript(spell_mage_improved_combustion);
     RegisterSpellScript(spell_mage_improved_scorch);
     RegisterSpellScript(spell_mage_incanters_flow);
-    RegisterSpellScript(spell_mage_living_bomb);
+    RegisterSpellScript(spell_mage_lit_fuse);
+    RegisterSpellScript(spell_mage_lit_fuse_proc);
     RegisterSpellScript(spell_mage_living_bomb_explosion);
     RegisterSpellScript(spell_mage_living_bomb_periodic);
+    RegisterSpellScript(spell_mage_living_bomb_periodic_no_spread);
     RegisterSpellScript(spell_mage_meteor);
     RegisterAreaTriggerAI(at_mage_meteor);
     RegisterAreaTriggerAI(at_mage_meteor_burn);
