@@ -198,7 +198,7 @@ bool AreaTrigger::Create(AreaTriggerCreatePropertiesId areaTriggerCreateProperti
     {
         SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::TimeToTargetScale), GetCreateProperties()->TimeToTargetScale != 0 ? GetCreateProperties()->TimeToTargetScale : *m_areaTriggerData->Duration);
         SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::TimeToTargetPos), *m_areaTriggerData->Duration);
-        SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::TimeToTargetFacing), *m_areaTriggerData->Duration);
+        SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::TimeToTargetShape), *m_areaTriggerData->Duration);
     }
     SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::BoundsRadius2D), GetCreateProperties()->Shape.GetMaxSearchRadius());
     SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::DecalPropertiesID), GetCreateProperties()->DecalPropertiesId);
@@ -472,19 +472,19 @@ void AreaTrigger::ClearOverrideMoveCurve()
     UpdateDynamicShapeFlag();
 }
 
-void AreaTrigger::SetOverrideFacingCurve(float overrideFacing)
+void AreaTrigger::SetOverrideShapeCurve(float overrideFacing)
 {
-    SetOverrideCurve(m_values.ModifyValue(&AreaTrigger::m_areaTriggerData).ModifyValue(&UF::AreaTriggerData::OverrideFacingCurve), overrideFacing);
+    SetOverrideCurve(m_values.ModifyValue(&AreaTrigger::m_areaTriggerData).ModifyValue(&UF::AreaTriggerData::OverrideShapeCurve), overrideFacing);
 }
 
-void AreaTrigger::SetOverrideFacingCurve(std::array<DBCPosition2D, 2> const& points, Optional<uint32> startTimeOffset, CurveInterpolationMode interpolation)
+void AreaTrigger::SetOverrideShapeCurve(std::array<DBCPosition2D, 2> const& points, Optional<uint32> startTimeOffset, CurveInterpolationMode interpolation)
 {
-    SetOverrideCurve(m_values.ModifyValue(&AreaTrigger::m_areaTriggerData).ModifyValue(&UF::AreaTriggerData::OverrideFacingCurve), points, startTimeOffset, interpolation);
+    SetOverrideCurve(m_values.ModifyValue(&AreaTrigger::m_areaTriggerData).ModifyValue(&UF::AreaTriggerData::OverrideShapeCurve), points, startTimeOffset, interpolation);
 }
 
-void AreaTrigger::ClearOverrideFacingCurve()
+void AreaTrigger::ClearOverrideShapeCurve()
 {
-    ClearOverrideCurve(m_values.ModifyValue(&AreaTrigger::m_areaTriggerData).ModifyValue(&UF::AreaTriggerData::OverrideFacingCurve));
+    ClearOverrideCurve(m_values.ModifyValue(&AreaTrigger::m_areaTriggerData).ModifyValue(&UF::AreaTriggerData::OverrideShapeCurve));
 }
 
 void AreaTrigger::SetSpellVisual(SpellCastVisual const& visual)
@@ -540,19 +540,11 @@ float AreaTrigger::CalcCurrentScale() const
     if (m_areaTriggerData->OverrideScaleCurve->OverrideActive)
         scale *= std::max(GetOverrideCurveValue(*m_areaTriggerData->OverrideScaleCurve, m_areaTriggerData->TimeToTargetScale), 0.000001f);
     else if (m_areaTriggerData->ScaleCurveId)
-        scale *= std::max(sDB2Manager.GetCurveValueAt(m_areaTriggerData->ScaleCurveId, GetOverrideCurveProgress(*m_areaTriggerData->OverrideScaleCurve, m_areaTriggerData->TimeToTargetScale)), 0.000001f);
+        scale *= std::max(sDB2Manager.GetCurveValueAt(m_areaTriggerData->ScaleCurveId, GetScaleProgress()), 0.000001f);
 
     scale *= std::max(GetOverrideCurveValue(*m_areaTriggerData->ExtraScaleCurve, m_areaTriggerData->TimeToTargetExtraScale), 0.000001f);
 
     return scale;
-}
-
-float AreaTrigger::GetProgress() const
-{
-    if (_totalDuration <= 0)
-        return 1.0f;
-
-    return std::clamp(float(GetTimeSinceCreated()) / float(GetTotalDuration()), 0.0f, 1.0f);
 }
 
 float AreaTrigger::GetOverrideCurveProgress(UF::OverrideCurve const& overrideCurve, uint32 timeTo) const
@@ -766,7 +758,7 @@ void AreaTrigger::SearchUnits(std::vector<Unit*>& targetList, float radius, bool
 
 void AreaTrigger::SearchUnitInSphere(UF::AreaTriggerSphere const& sphere, std::vector<Unit*>& targetList)
 {
-    float progress = GetProgress();
+    float progress = GetShapeProgress();
     if (m_areaTriggerData->MorphCurveId)
         progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -783,7 +775,7 @@ void AreaTrigger::SearchUnitInSphere(UF::AreaTriggerSphere const& sphere, std::v
 
 void AreaTrigger::SearchUnitInBox(UF::AreaTriggerBox const& box, std::vector<Unit*>& targetList)
 {
-    float progress = GetProgress();
+    float progress = GetShapeProgress();
     if (m_areaTriggerData->MorphCurveId)
         progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -816,7 +808,7 @@ void AreaTrigger::SearchUnitInBox(UF::AreaTriggerBox const& box, std::vector<Uni
 
 void AreaTrigger::SearchUnitInPolygon(UF::AreaTriggerPolygon const& polygon, std::vector<Unit*>& targetList)
 {
-    float progress = GetProgress();
+    float progress = GetShapeProgress();
     if (m_areaTriggerData->MorphCurveId)
         progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -852,7 +844,7 @@ void AreaTrigger::SearchUnitInPolygon(UF::AreaTriggerPolygon const& polygon, std
 
 void AreaTrigger::SearchUnitInCylinder(UF::AreaTriggerCylinder const& cylinder, std::vector<Unit*>& targetList)
 {
-    float progress = GetProgress();
+    float progress = GetShapeProgress();
     if (m_areaTriggerData->MorphCurveId)
         progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -890,7 +882,7 @@ void AreaTrigger::SearchUnitInCylinder(UF::AreaTriggerCylinder const& cylinder, 
 
 void AreaTrigger::SearchUnitInDisk(UF::AreaTriggerDisk const& disk, std::vector<Unit*>& targetList)
 {
-    float progress = GetProgress();
+    float progress = GetShapeProgress();
     if (m_areaTriggerData->MorphCurveId)
         progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -932,13 +924,13 @@ void AreaTrigger::SearchUnitInDisk(UF::AreaTriggerDisk const& disk, std::vector<
 
 void AreaTrigger::SearchUnitInBoundedPlane(UF::AreaTriggerBoundedPlane const& boundedPlane, std::vector<Unit*>& targetList)
 {
-    float progress = GetProgress();
+    float progress = GetShapeProgress();
     if (m_areaTriggerData->MorphCurveId)
         progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
     float scale = CalcCurrentScale();
-    float extentsY = G3D::lerp(boundedPlane.ExtentsX, boundedPlane.ExtentsTargetX, progress) * scale;
-    float extentsZ = G3D::lerp(boundedPlane.ExtentsY, boundedPlane.ExtentsTargetY, progress) * scale;
+    float extentsY = G3D::lerp(boundedPlane.ExtentsY, boundedPlane.ExtentsTargetY, progress) * scale;
+    float extentsZ = G3D::lerp(boundedPlane.ExtentsZ, boundedPlane.ExtentsTargetZ, progress) * scale;
     float radius = std::sqrt(extentsY * extentsY + extentsZ * extentsZ);
 
     SearchUnits(targetList, radius, false);
@@ -1159,10 +1151,10 @@ void AreaTrigger::SetShape(AreaTriggerShapeInfo const& shape)
         {
             SetUpdateFieldValue(areaTriggerData.ModifyValue(&UF::AreaTriggerData::ShapeType), 8);
             auto boundedPlane = areaTriggerData.ModifyValue(&UF::AreaTriggerData::ShapeData, UF::VariantCase<UF::AreaTriggerBoundedPlane>);
-            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsX), shapeData.Extents.Pos.GetPositionX());
-            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsY), shapeData.Extents.Pos.GetPositionY());
-            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsTargetX), shapeData.ExtentsTarget.Pos.GetPositionX());
-            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsTargetY), shapeData.ExtentsTarget.Pos.GetPositionY());
+            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsY), shapeData.ExtentsY);
+            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsZ), shapeData.ExtentsZ);
+            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsTargetY), shapeData.ExtentsTargetY);
+            SetUpdateFieldValue(boundedPlane.ModifyValue(&UF::AreaTriggerBoundedPlane::ExtentsTargetZ), shapeData.ExtentsTargetZ);
         }
         else
             static_assert(Trinity::dependant_false_v<ShapeType>, "Unsupported shape type");
@@ -1188,7 +1180,7 @@ void AreaTrigger::UpdatePolygonVertices()
     _polygonVertices.assign(shape->Vertices.begin(), shape->Vertices.end());
     if (!shape->VerticesTarget.empty())
     {
-        float progress = GetProgress();
+        float progress = GetShapeProgress();
         if (m_areaTriggerData->MorphCurveId)
             progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -1423,7 +1415,7 @@ AreaTrigger::MovementUpdateLocalResult AreaTrigger::CalculateLocalPositionAndRot
 
     if (m_areaTriggerData->TargetRollPitchYaw.has_value())
     {
-        float progress = GetOverrideCurveProgress(m_areaTriggerData->OverrideFacingCurve, m_areaTriggerData->TimeToTargetFacing);
+        float progress = GetShapeProgress();
         if (m_areaTriggerData->MorphCurveId)
             progress = sDB2Manager.GetCurveValueAt(m_areaTriggerData->MorphCurveId, progress);
 
@@ -1436,9 +1428,11 @@ AreaTrigger::MovementUpdateLocalResult AreaTrigger::CalculateLocalPositionAndRot
     if (HasOverridePosition())
     {
         result.Status = MovementUpdateResult::Moved;
-        result.Position.x = GetOverrideCurveValue(*m_areaTriggerData->OverrideMoveCurveX, m_areaTriggerData->TimeToTargetPos);
-        result.Position.y = GetOverrideCurveValue(*m_areaTriggerData->OverrideMoveCurveY, m_areaTriggerData->TimeToTargetPos);
-        result.Position.z = GetOverrideCurveValue(*m_areaTriggerData->OverrideMoveCurveZ, m_areaTriggerData->TimeToTargetPos);
+
+        float progress = GetOverridePosProgress();
+        result.Position.x = GetOverrideCurveValueAtProgress(*m_areaTriggerData->OverrideMoveCurveX, progress);
+        result.Position.y = GetOverrideCurveValueAtProgress(*m_areaTriggerData->OverrideMoveCurveY, progress);
+        result.Position.z = GetOverrideCurveValueAtProgress(*m_areaTriggerData->OverrideMoveCurveZ, progress);
 
         if (m_movementInfo.transport.guid.IsEmpty())
             result.Position = PositionToVector3(GetMovementOrigin().GetPositionOffsetTo(Vector3ToPosition(result.Position)));
@@ -1590,8 +1584,7 @@ AreaTrigger::MovementUpdateLocalResult AreaTrigger::CalculateLocalSplinePosition
 
     float orientation = 0.0f;
     if (m_areaTriggerData->FacingCurveId)
-        orientation += sDB2Manager.GetCurveValueAt(m_areaTriggerData->FacingCurveId,
-            GetOverrideCurveProgress(m_areaTriggerData->OverrideFacingCurve, m_areaTriggerData->TimeToTargetFacing));
+        orientation += sDB2Manager.GetCurveValueAt(m_areaTriggerData->FacingCurveId, GetShapeProgress());
 
     if (!HasAreaTriggerFlag(AreaTriggerFieldFlags::AbsoluteOrientation))
     {
@@ -1657,8 +1650,7 @@ AreaTrigger::MovementUpdateLocalResult AreaTrigger::CalculateLocalOrbitPositionA
 
     float orientation = 0.0f;
     if (m_areaTriggerData->FacingCurveId)
-        orientation = sDB2Manager.GetCurveValueAt(m_areaTriggerData->FacingCurveId,
-            GetOverrideCurveProgress(m_areaTriggerData->OverrideFacingCurve, m_areaTriggerData->TimeToTargetFacing));
+        orientation = sDB2Manager.GetCurveValueAt(m_areaTriggerData->FacingCurveId, GetShapeProgress());
 
     if (!HasAreaTriggerFlag(AreaTriggerFieldFlags::AbsoluteOrientation))
     {
@@ -1677,8 +1669,7 @@ AreaTrigger::MovementUpdateLocalResult AreaTrigger::CalculateLocalStationaryPosi
 {
     float orientation = 0.0f;
     if (m_areaTriggerData->FacingCurveId)
-        orientation = sDB2Manager.GetCurveValueAt(m_areaTriggerData->FacingCurveId,
-            GetOverrideCurveProgress(m_areaTriggerData->OverrideFacingCurve, m_areaTriggerData->TimeToTargetFacing));
+        orientation = sDB2Manager.GetCurveValueAt(m_areaTriggerData->FacingCurveId, GetShapeProgress());
 
     if (!HasAreaTriggerFlag(AreaTriggerFieldFlags::AbsoluteOrientation))
         orientation += *m_areaTriggerData->Facing;
