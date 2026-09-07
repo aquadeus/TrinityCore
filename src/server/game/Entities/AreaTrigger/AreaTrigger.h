@@ -21,6 +21,7 @@
 #include "Object.h"
 #include "GridObject.h"
 #include "MapObject.h"
+#include "QuaternionData.h"
 #include "AreaTriggerTemplate.h"
 
 class AuraEffect;
@@ -173,6 +174,9 @@ class TC_GAME_API AreaTrigger final : public WorldObject, public GridObject<Area
 
         void SetSpellVisual(SpellCastVisual const& visual);
 
+        void SetRollPitchYaw(float roll, float pitch, float yaw,
+            Optional<float> targetRoll = {}, Optional<float> targetPitch = {}, Optional<float> targetYaw = {});
+
         int32 GetDuration() const { return _duration; }
         int32 GetTotalDuration() const { return _totalDuration; }
         void SetDuration(int32 newDuration);
@@ -253,14 +257,16 @@ class TC_GAME_API AreaTrigger final : public WorldObject, public GridObject<Area
 
         void UpdatePositionAndRotation();
 
-        struct MovementUpdateResult;
+        struct MovementUpdateWorldResult;
+        MovementUpdateWorldResult CalculateWorldPositionAndRotation() const;
 
-        MovementUpdateResult CalculateLocalPositionAndRotation() const;
+        struct MovementUpdateLocalResult;
+        MovementUpdateLocalResult CalculateLocalPositionAndRotation() const;
 
         friend struct AreaTriggerPositionAndRotationCalcVisitor;
-        MovementUpdateResult CalculateLocalSplinePositionAndRotation() const;
-        MovementUpdateResult CalculateLocalOrbitPositionAndRotation(UF::AreaTriggerOrbit const& orbit) const;
-        MovementUpdateResult CalculateLocalStationaryPositionAndRotation() const;
+        MovementUpdateLocalResult CalculateLocalSplinePositionAndRotation() const;
+        MovementUpdateLocalResult CalculateLocalOrbitPositionAndRotation(UF::AreaTriggerOrbit const& orbit) const;
+        MovementUpdateLocalResult CalculateLocalStationaryPositionAndRotation() const;
 
         Position const& GetMovementOrigin() const;
 
@@ -278,9 +284,10 @@ class TC_GAME_API AreaTrigger final : public WorldObject, public GridObject<Area
         AuraEffect const* _aurEff;
 
         Position _stationaryPosition;
+        QuaternionData _rotation;
         int32 _duration;
         int32 _totalDuration;
-        float _verticesUpdatePreviousOrientation;
+        QuaternionData _verticesUpdatePreviousRotation;
         bool _isRemoved;
 
         std::vector<Position> _polygonVertices;
