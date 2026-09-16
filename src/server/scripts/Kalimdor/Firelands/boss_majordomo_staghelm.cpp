@@ -35,48 +35,63 @@ namespace Scripts::Kalimdor::Firelands::MajordomoStaghelm
         static constexpr uint32 FormController = 98386;
         static constexpr uint32 ClumpCheck = 98399;
         static constexpr uint32 CatForm = 98374;
+        static constexpr uint32 ScorpionForm = 98379;
         static constexpr uint32 LeapingFlamesSelector = 101165;
         static constexpr uint32 LeapingFlames = 98476;
-        static constexpr uint32 LeapingFlamesSummon = 101222;
-        static constexpr uint32 ScorpionForm = 98379;
         static constexpr uint32 Fury = 97235;
         static constexpr uint32 FlameScythe = 98474;
         static constexpr uint32 FieryCyclone = 98443;
+        static constexpr uint32 Berserk = 47008;
+        static constexpr uint32 Adrenaline = 97238;
+        static constexpr uint32 BurningOrbsSummon = 98565;
+        static constexpr uint32 SearingSeeds = 98450;
+        static constexpr uint32 SearingSeed = 98620;
     }
 
     namespace Texts
     {
-
+        Intro1 = 0;
+        Intro2 = 1;
+        Intro3 = 2;
+        Aggro  = 3;
     }
 
     namespace Events
     {
-
+        Berserk = 1,
+        LeapingFlames,
+        FlameScythe
     }
 
     namespace Positions
     {
     }
 
-    namespace Points
+    namespace Actions
     {
+    }
+
+    namespace Phases
+    {
+        PhaseCat = 1,
+        PhaseScorpion,
+        PhaseHuman
     }
 
 // 52571 - Majordomo Staghelm <Archdruid of the Flame>
 struct boss_majordomo_staghelm : public BossAI
 {
-    boss_majordomo_staghelm(Creature* creature) : BossAI(creature, DATA_MAJORDOMO_STAGHELM), _shapeShiftCount(0), { }
+    boss_majordomo_staghelm(Creature* creature) : BossAI(creature, DATA_MAJORDOMO_STAGHELM), { }
 
     void JustAppeared() override
     {
-        //DoCastSelf(Spells::FelCrazed, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
-        //DoCast(Spells::IllicitInfusionVisual);
+        me->SetPowerType(me->GetPowerType());
+        me->SetPower(me->GetPowerType(), 0);
     }
 
     void Reset() override
     {
         _Reset();
-        _shapeShiftCount = 0;
     }
 
     void JustDied(Unit* /*killer*/) override
@@ -89,8 +104,10 @@ struct boss_majordomo_staghelm : public BossAI
 
     void SpellHit(WorldObject* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == Spells::Destabilized)
-            Talk(Texts::Destabilized);
+        if (spellInfo->Id == Spells::CatForm)
+            PhaseEvents(Phases::PhaseCat);
+        else if (spellInfo->Id == Spells::ScorpionForm)
+            PhaseEvents(Phases::PhaseScorpion);
     }
 
     void EnterEvadeMode(EvadeReason why) override
@@ -113,11 +130,49 @@ struct boss_majordomo_staghelm : public BossAI
         instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me, 1);
         instance->SetBossState(DATA_MAJORDOMO_STAGHELM, IN_PROGRESS);
 
-        events.ScheduleEvent(Events::ChaosBarrage, 1s);
-        events.ScheduleEvent(Events::MirrorImages, 14s);
+        DoCastSelf(Spells::FormController);
 
-        if (IsHeroicOrHigher())
-            events.ScheduleEvent(Events::FelNova, 12s);
+        events.ScheduleEvent(Events::Berserk, 10min);
+        events.ScheduleEvent(Events::CheckEnergy, 500ms);
+
+        //if (IsHeroic())
+            //events.ScheduleEvent(Events::FelNova, 12s);
+    }
+
+    void PhaseEvents(uint8 phase)
+    {
+        events.Reset();
+
+        switch (phase)
+        {
+            case PhaseCat:
+            {
+                me->RemoveAurasDueToSpell(Spells::ScorpionForm);
+                me->RemoveAurasDueToSpell(Spells::Adrenaline);
+                me->SetPower(me->GetPowerType(), 0);
+                DoCastSelf(Spells::CatForm);
+                DoCastSelf(Spells::Rage);
+                events.SetPhase(PhaseCat);
+                break;
+            }
+            case PhaseScorpion:
+            {
+                me->RemoveAurasDueToSpell(Spells::CatForm);
+                me->RemoveAurasDueToSpell(Spells::Adrenaline);
+                me->SetPower(me->GetPowerType(), 0);
+                DoCastSelf(Spells::ScorpionForm);
+                DoCastSelf(Spells::Rage);
+                events.SetPhase(PhaseScorpion);
+                break;
+            }
+
+            case PhaseHuman:
+            {
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     void UpdateAI(uint32 diff) override
@@ -134,24 +189,22 @@ struct boss_majordomo_staghelm : public BossAI
         {
             switch (eventId)
             {
-                case Events::ChaosBarrage:
+                case Events::Berserk:
                 {
-                    DoCastVictim(Spells::ChaosBarrage, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
-                    events.Repeat(3500ms);
+                    DoCastSelf(Spells::Berserk);
                     break;
                 }
-                case Events::MirrorImages:
+                case Events::CheckEnergy:
                 {
-                    Talk(Texts::MirrorImages);
-                    DoCastSelf(Spells::MirrorImages, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
-                    events.Repeat(30500ms);
-                    break;
-                }
-                case Events::FelNova:
-                {
-                    Talk(Texts::FelNova);
-                    DoCast(Spells::FelNovaSelector);
-                    events.Repeat(15s);
+                    if (!me->GetPower(POWER_ENERGY) == me->GetMaxPower(POWER_ENERGY))
+                        return;
+
+                    if (events.IsInPhase(PhaseScorpion))
+                        DoCastVictim(Spells::FlameScythe);
+                    if (events.IsInPhase(PhaseCat))
+                        DoCast(Spells::LeapingFlamesSelector);
+
+                    events.Repeat(500ms);
                     break;
                 }
                 default:
@@ -162,9 +215,6 @@ struct boss_majordomo_staghelm : public BossAI
                 return;
         }
     }
-
-private:
-    uint8 _felshieldCount;
 };
 
 // 98386 - Form Controller
@@ -190,6 +240,67 @@ class spell_majordomo_slaghelm_form_controller : public AuraScript
     }
 };
 
+// 101165 - Leaping Flames
+class spell_majordomo_slaghelm_leaping_flames_selector : public SpellScript
+{
+    bool Validate(SpellInfo const* /*spellInfo*/) override
+    {
+        return ValidateSpellInfo({ Spells::LeapingFlames });
+    }
+
+    void HandleHitTarget(SpellEffIndex /*effIndex*/) const
+    {
+        GetCaster()->CastSpell(GetHitUnit()->GetPosition(), Spells::LeapingFlames, CastSpellExtraArgsInit{
+            .TriggerFlags = TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR,
+            .TriggeringSpell = GetSpell()
+        });
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_majordomo_slaghelm_leaping_flames_selector::HandleHitTarget, EFFECT_0, SPELL_EFFECT_DUMMY);
+    }
+};
+
+// 98476 - Leaping Flames
+class spell_majordomo_slaghelm_leaping_flames_jump : public SpellScript
+{
+    void HandleScript(SpellEffIndex /*effIndex*/) const
+    {
+        GetCaster()->CastSpell(GetCaster()->GetPosition(), GetEffectValueAsInt(), TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
+    }
+
+    void Register() override
+    {
+        OnEffectLaunch += SpellEffectFn(spell_majordomo_slaghelm_leaping_flames_jump::HandleScript, EFFECT_0, SPELL_EFFECT_JUMP_DEST);
+    }
+};
+
+// 98451 - Burning Orbs
+class spell_majordomo_staghelm_burning_orbs : public SpellScript
+{
+    bool Validate(SpellInfo const* /*spell*/) override
+    {
+        return ValidateSpellInfo({ Spells::BurningOrbsSummon });
+    }
+
+    void HandleOrbs() const
+    {
+        Unit* caster = GetCaster();
+        uint8 OrbsCount = caster->GetMap()->GetPlayersCountExceptGMs() / 5;
+
+        if (OrbsCount < 5)
+            OrbsCount = 1;
+
+        for (uint8 i = 0; i < OrbsCount; ++i)
+            caster->CastSpell(caster, Spells::BurningOrbsSummon, TRIGGERED_IGNORE_CAST_IN_PROGRESS | TRIGGERED_DONT_REPORT_CAST_ERROR);
+    }
+
+    void Register() override
+    {
+        OnHit += SpellHitFn(spell_majordomo_staghelm_burning_orbs::HandleOrbs);
+    }
+};
 
 }
 
@@ -200,4 +311,8 @@ void AddSC_boss_majordomo_staghelm()
     RegisterFirelandsAI(boss_majordomo_staghelm);
 
     RegisterSpellScript(spell_majordomo_slaghelm_form_controller);
+    RegisterSpellScript(spell_majordomo_slaghelm_leaping_flames_selector);
+    RegisterSpellScript(spell_majordomo_slaghelm_leaping_flames_jump);
+    RegisterSpellScript(spell_majordomo_staghelm_burning_orbs);
+
 }
