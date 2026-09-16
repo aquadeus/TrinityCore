@@ -67,7 +67,7 @@ namespace Scripts::Kalimdor::Firelands::MajordomoStaghelm
     {
         static constexpr uint8 PhaseCat = 1;
         static constexpr uint8 PhaseScorpion =2;
-        static constexpr uint8 PhaseHuman r3;
+        static constexpr uint8 PhaseHuman = 3;
     }
 
 // 52571 - Majordomo Staghelm <Archdruid of the Flame>
