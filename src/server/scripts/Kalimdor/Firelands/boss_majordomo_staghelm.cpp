@@ -301,8 +301,7 @@ class spell_majordomo_staghelm_burning_orbs : public SpellScript
         OnHit += SpellHitFn(spell_majordomo_staghelm_burning_orbs::HandleOrbs);
     }
 };
-
-}
+};
 
 void AddSC_boss_majordomo_staghelm()
 {
