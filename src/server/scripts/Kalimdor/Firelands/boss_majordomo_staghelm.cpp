@@ -59,8 +59,7 @@ namespace Scripts::Kalimdor::Firelands::MajordomoStaghelm
     namespace Events
     {
         static constexpr uint8 Berserk = 1;
-        static constexpr uint8 LeapingFlames =2;
-        static constexpr uint8 FlameScythe =3;
+        static constexpr uint8 CheckEnergy = 2;
     }
 
     namespace Phases
