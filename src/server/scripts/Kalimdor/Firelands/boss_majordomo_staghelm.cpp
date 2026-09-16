@@ -50,32 +50,24 @@ namespace Scripts::Kalimdor::Firelands::MajordomoStaghelm
 
     namespace Texts
     {
-        Intro1 = 0;
-        Intro2 = 1;
-        Intro3 = 2;
-        Aggro  = 3;
+        static constexpr uint8 Intro1 = 0;
+        static constexpr uint8 Intro2 = 1;
+        static constexpr uint8 Intro3 = 2;
+        static constexpr uint8 Aggro  = 3;
     }
 
     namespace Events
     {
-        Berserk = 1,
-        LeapingFlames,
-        FlameScythe
-    }
-
-    namespace Positions
-    {
-    }
-
-    namespace Actions
-    {
+        static constexpr uint8 Berserk = 1;
+        static constexpr uint8 LeapingFlames =2;
+        static constexpr uint8 FlameScythe =3;
     }
 
     namespace Phases
     {
-        PhaseCat = 1,
-        PhaseScorpion,
-        PhaseHuman
+        static constexpr uint8 PhaseCat = 1;
+        static constexpr uint8 PhaseScorpion =2;
+        static constexpr uint8 PhaseHuman r3;
     }
 
 // 52571 - Majordomo Staghelm <Archdruid of the Flame>
