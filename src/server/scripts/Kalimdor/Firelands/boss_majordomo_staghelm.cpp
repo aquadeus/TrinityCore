@@ -136,7 +136,7 @@ struct boss_majordomo_staghelm : public BossAI
 
         switch (phase)
         {
-            case PhaseCat:
+            case Phases::PhaseCat:
             {
                 me->RemoveAurasDueToSpell(Spells::ScorpionForm);
                 me->RemoveAurasDueToSpell(Spells::Adrenaline);
@@ -146,7 +146,7 @@ struct boss_majordomo_staghelm : public BossAI
                 events.SetPhase(PhaseCat);
                 break;
             }
-            case PhaseScorpion:
+            case Phases::PhaseScorpion:
             {
                 me->RemoveAurasDueToSpell(Spells::CatForm);
                 me->RemoveAurasDueToSpell(Spells::Adrenaline);
@@ -157,7 +157,7 @@ struct boss_majordomo_staghelm : public BossAI
                 break;
             }
 
-            case PhaseHuman:
+            case Phases::PhaseHuman:
             {
                 break;
             }
