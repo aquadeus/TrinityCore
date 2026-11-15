@@ -1696,7 +1696,7 @@ TC_API_EXPORT EnumText EnumUtils<SpellAttr11>::ToString(SpellAttr11 value)
 {
     switch (value)
     {
-        case SPELL_ATTR11_UNK0: return { "SPELL_ATTR11_UNK0", "Unknown attribute 0@Attr11", "" };
+        case SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING: return { "SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING", "Lock Caster Movement and Facing While Casting", "" };
         case SPELL_ATTR11_UNK1: return { "SPELL_ATTR11_UNK1", "Unknown attribute 1@Attr11", "" };
         case SPELL_ATTR11_SCALES_WITH_ITEM_LEVEL: return { "SPELL_ATTR11_SCALES_WITH_ITEM_LEVEL", "Scales with Casting Item's Level", "" };
         case SPELL_ATTR11_UNK3: return { "SPELL_ATTR11_UNK3", "Unknown attribute 3@Attr11", "" };
@@ -1740,7 +1740,7 @@ TC_API_EXPORT SpellAttr11 EnumUtils<SpellAttr11>::FromIndex(size_t index)
 {
     switch (index)
     {
-        case 0: return SPELL_ATTR11_UNK0;
+        case 0: return SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING;
         case 1: return SPELL_ATTR11_UNK1;
         case 2: return SPELL_ATTR11_SCALES_WITH_ITEM_LEVEL;
         case 3: return SPELL_ATTR11_UNK3;
@@ -1781,7 +1781,7 @@ TC_API_EXPORT size_t EnumUtils<SpellAttr11>::ToIndex(SpellAttr11 value)
 {
     switch (value)
     {
-        case SPELL_ATTR11_UNK0: return 0;
+        case SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING: return 0;
         case SPELL_ATTR11_UNK1: return 1;
         case SPELL_ATTR11_SCALES_WITH_ITEM_LEVEL: return 2;
         case SPELL_ATTR11_UNK3: return 3;
@@ -1836,7 +1836,7 @@ TC_API_EXPORT EnumText EnumUtils<SpellAttr12>::ToString(SpellAttr12 value)
         case SPELL_ATTR12_UNK8: return { "SPELL_ATTR12_UNK8", "Unknown attribute 8@Attr12", "" };
         case SPELL_ATTR12_IGNORE_CASTING_DISABLED: return { "SPELL_ATTR12_IGNORE_CASTING_DISABLED", "Active Passive", "Ignores aura 263 SPELL_AURA_DISABLE_CASTING_EXCEPT_ABILITIES" };
         case SPELL_ATTR12_UNK10: return { "SPELL_ATTR12_UNK10", "Unknown attribute 10@Attr12", "" };
-        case SPELL_ATTR12_UNK11: return { "SPELL_ATTR12_UNK11", "Unknown attribute 11@Attr12", "" };
+        case SPELL_ATTR12_FACE_DESTINATION: return { "SPELL_ATTR12_FACE_DESTINATION", "Face Destination", "" };
         case SPELL_ATTR12_UNK12: return { "SPELL_ATTR12_UNK12", "Unknown attribute 12@Attr12", "" };
         case SPELL_ATTR12_UNK13: return { "SPELL_ATTR12_UNK13", "Unknown attribute 13@Attr12", "" };
         case SPELL_ATTR12_UNK14: return { "SPELL_ATTR12_UNK14", "Unknown attribute 14@Attr12", "" };
@@ -1880,7 +1880,7 @@ TC_API_EXPORT SpellAttr12 EnumUtils<SpellAttr12>::FromIndex(size_t index)
         case 8: return SPELL_ATTR12_UNK8;
         case 9: return SPELL_ATTR12_IGNORE_CASTING_DISABLED;
         case 10: return SPELL_ATTR12_UNK10;
-        case 11: return SPELL_ATTR12_UNK11;
+        case 11: return SPELL_ATTR12_FACE_DESTINATION;
         case 12: return SPELL_ATTR12_UNK12;
         case 13: return SPELL_ATTR12_UNK13;
         case 14: return SPELL_ATTR12_UNK14;
@@ -1921,7 +1921,7 @@ TC_API_EXPORT size_t EnumUtils<SpellAttr12>::ToIndex(SpellAttr12 value)
         case SPELL_ATTR12_UNK8: return 8;
         case SPELL_ATTR12_IGNORE_CASTING_DISABLED: return 9;
         case SPELL_ATTR12_UNK10: return 10;
-        case SPELL_ATTR12_UNK11: return 11;
+        case SPELL_ATTR12_FACE_DESTINATION: return 11;
         case SPELL_ATTR12_UNK12: return 12;
         case SPELL_ATTR12_UNK13: return 13;
         case SPELL_ATTR12_UNK14: return 14;

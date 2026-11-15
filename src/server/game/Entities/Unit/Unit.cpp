@@ -3287,13 +3287,15 @@ bool Unit::IsMovementPreventedByCasting() const
 {
     if (Spell* spell = m_currentSpells[CURRENT_GENERIC_SPELL])
         if (!CanCastSpellWhileMoving(spell->GetSpellInfo())
-            && spell->getState() == SPELL_STATE_PREPARING && spell->m_spellInfo->InterruptFlags.HasFlag(SpellInterruptFlags::Movement))
+            && spell->getState() == SPELL_STATE_PREPARING && (spell->m_spellInfo->InterruptFlags.HasFlag(SpellInterruptFlags::Movement)
+                || spell->m_spellInfo->HasAttribute(SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING)))
             return true;
 
     // channeled spells during channel stage (after the initial cast timer) allow movement without Moving channel interrupt flag
     if (Spell* spell = m_currentSpells[CURRENT_CHANNELED_SPELL])
         if (!CanCastSpellWhileMoving(spell->GetSpellInfo())
-            && ((spell->getState() == SPELL_STATE_PREPARING && spell->m_spellInfo->InterruptFlags.HasFlag(SpellInterruptFlags::Movement))
+            && ((spell->getState() == SPELL_STATE_PREPARING && (spell->m_spellInfo->InterruptFlags.HasFlag(SpellInterruptFlags::Movement)
+                || spell->m_spellInfo->HasAttribute(SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING)))
                 || (spell->getState() == SPELL_STATE_CHANNELING && !spell->GetSpellInfo()->IsMoveAllowedChannel())))
             return true;
 

@@ -3534,6 +3534,16 @@ SpellCastResult Spell::prepare(SpellCastTargets const& targets, AuraEffect const
             m_caster->ToCreature()->SetSpellFocus(this, nullptr);
     }
 
+    if (Creature* creatureCaster = m_caster->ToCreature())
+    {
+        if (m_spellInfo->HasAttribute(SPELL_ATTR12_FACE_DESTINATION) && m_targets.HasDst() && !creatureCaster->CannotTurn())
+            if (creatureCaster->GetExactDist2d(m_targets.GetDstPos()) > 0.01f)
+                creatureCaster->SetFacingTo(creatureCaster->GetAbsoluteAngle(m_targets.GetDstPos()));
+
+        if (m_casttime && m_spellInfo->HasAttribute(SPELL_ATTR11_LOCK_CASTER_MOVEMENT_AND_FACING_WHILE_CASTING))
+            creatureCaster->StopMoving();
+    }
+
     if (movementResult != SPELL_CAST_OK)
     {
         if (m_caster->ToUnit()->IsControlledByPlayer() || !CanStopMovementForSpellCasting(m_caster->ToUnit()->GetMotionMaster()->GetCurrentMovementGeneratorType()))
