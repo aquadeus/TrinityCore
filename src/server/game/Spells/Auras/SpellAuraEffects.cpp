@@ -634,7 +634,7 @@ NonDefaultConstructible<pAuraEffectHandler> AuraEffectHandler[TOTAL_AURAS]=
     &AuraEffect::HandleNULL,                                      //562 SPELL_AURA_562
     &AuraEffect::HandleNULL,                                      //563 SPELL_AURA_563
     &AuraEffect::HandleNULL,                                      //564 SPELL_AURA_564
-    &AuraEffect::HandleNULL,                                      //565 SPELL_AURA_565
+    &AuraEffect::HandleNoImmediateEffect,                         //565 SPELL_AURA_MOD_AOE_AVOIDANCE                 implemented in Unit::MagicSpellHitResult
     &AuraEffect::HandleNULL,                                      //566 SPELL_AURA_566
     &AuraEffect::HandleNULL,                                      //567 SPELL_AURA_567
     &AuraEffect::HandleNULL,                                      //568 SPELL_AURA_568
@@ -644,7 +644,7 @@ NonDefaultConstructible<pAuraEffectHandler> AuraEffectHandler[TOTAL_AURAS]=
     &AuraEffect::HandleNULL,                                      //572 SPELL_AURA_572
     &AuraEffect::HandleNULL,                                      //573 SPELL_AURA_573
     &AuraEffect::HandleNULL,                                      //574 SPELL_AURA_574
-    &AuraEffect::HandleNULL,                                      //575 SPELL_AURA_575
+    &AuraEffect::HandleNoImmediateEffect,                         //576 SPELL_AURA_MOD_INCREASES_SPELL_PCT_TO_HIT  implemented in Unit::MagicSpellHitResult
     &AuraEffect::HandleNULL,                                      //576 SPELL_AURA_576
     &AuraEffect::HandleNULL,                                      //577 SPELL_AURA_577
     &AuraEffect::HandleNULL,                                      //578 SPELL_AURA_578
@@ -663,7 +663,7 @@ NonDefaultConstructible<pAuraEffectHandler> AuraEffectHandler[TOTAL_AURAS]=
     &AuraEffect::HandleNULL,                                      //591 SPELL_AURA_591
     &AuraEffect::HandleNULL,                                      //592 SPELL_AURA_592
     &AuraEffect::HandleNULL,                                      //593 SPELL_AURA_593
-    &AuraEffect::HandleNULL,                                      //594 SPELL_AURA_594
+    &AuraEffect::HandleNULL,                                      //594 SPELL_AURA_MOD_TARGET_RESIST_BY_SPELL_CLASS Use SpellClassMask for spell select
     &AuraEffect::HandleNULL,                                      //595 SPELL_AURA_595
     &AuraEffect::HandleNULL,                                      //596 SPELL_AURA_596
     &AuraEffect::HandleNULL,                                      //597 SPELL_AURA_597
