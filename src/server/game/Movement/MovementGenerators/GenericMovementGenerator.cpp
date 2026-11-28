@@ -57,7 +57,7 @@ bool GenericMovementGenerator::Initialize(Unit* owner)
     Movement::MoveSplineInit init(owner);
     _splineInit(init);
     int32 duration = init.Launch();
-    if (_durationTracksSpline)
+    if (_durationTracksSpline && !owner->movespline->isCyclic())
         _duration.emplace(duration);
     return duration > 0;
 }
@@ -73,7 +73,7 @@ bool GenericMovementGenerator::Update(Unit* owner, uint32 diff)
         return false;
 
     // Cyclic splines never expire, so update the duration only if it's not cyclic
-    if (_duration && (!_durationTracksSpline || !owner->movespline->isCyclic()))
+    if (_duration)
         _duration->Update(diff);
 
     if ((_duration && _duration->Passed()) || owner->movespline->Finalized())
